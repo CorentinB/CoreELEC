@@ -2228,7 +2228,7 @@ index 11c671b11..2bf84915f 100644
 +    auto skipLeadingSpaces = [&](vecText::const_iterator& it)
 +    {
 +      it = std::find_if_not(it, line.m_text.end(),
-+                            std::bind_front(&CGUITextLayout::CanWrapAtLetter, this));
++                            [this](character_t c) { return CanWrapAtLetter(c); });
 +    };
  
 -      curLine.emplace_back(letter);
@@ -2246,7 +2246,7 @@ index 11c671b11..2bf84915f 100644
 +    {
 +      // Find next candidate wrap position
 +      auto wordEnd = std::find_if(current, line.m_text.end(),
-+                                  std::bind_front(&CGUITextLayout::CanWrapAtLetter, this));
++                                  [this](character_t c) { return CanWrapAtLetter(c); });
 +      const bool hasSpace = (wordEnd != line.m_text.end());
 +      const float wordWidth = widthOf(current, wordEnd);
 +      const float spaceWidth = hasSpace ? widthOf(wordEnd, wordEnd + 1) : 0.0f;
