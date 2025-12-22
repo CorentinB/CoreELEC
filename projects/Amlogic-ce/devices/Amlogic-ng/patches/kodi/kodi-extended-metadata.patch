@@ -1,17 +1,17 @@
-diff --git a/xbmc/GUIInfoManager.cpp b/xbmc/GUIInfoManager.cpp
+diff --color -ruN xbmc.orig/GUIInfoManager.cpp xbmc/GUIInfoManager.cpp
 --- a/xbmc/GUIInfoManager.cpp	2025-12-22 17:28:40
-+++ b/xbmc/GUIInfoManager.cpp	2025-12-22 17:29:07
++++ b/xbmc/GUIInfoManager.cpp	2025-12-22 17:39:33
 @@ -7194,6 +7194,17 @@
                                    { "isvideoextra",     LISTITEM_ISVIDEOEXTRA },
                                    { "videoversionname", LISTITEM_VIDEOVERSION_NAME },
                                    { "hasvideoextras",   LISTITEM_HASVIDEOEXTRAS },
 +                                  // Extended metadata InfoLabels (CoreELEC extension)
++                                  // Note: "status" already exists for TV show status
 +                                  { "imdbrating",       LISTITEM_IMDB_RATING },
 +                                  { "tmdbrating",       LISTITEM_TMDB_RATING },
 +                                  { "rtrating",         LISTITEM_RT_RATING },
 +                                  { "metacriticrating", LISTITEM_METACRITIC_RATING },
 +                                  { "traktrating",      LISTITEM_TRAKT_RATING },
-+                                  { "tvshowstatus",     LISTITEM_TVSHOW_STATUS },
 +                                  { "nextaired",        LISTITEM_NEXT_AIRED },
 +                                  { "totalseasons",     LISTITEM_TOTAL_SEASONS_EXT },
 +                                  { "totalepisodes",    LISTITEM_TOTAL_EPISODES_EXT },
@@ -19,33 +19,33 @@ diff --git a/xbmc/GUIInfoManager.cpp b/xbmc/GUIInfoManager.cpp
  };
  // clang-format on
  
-diff --git a/xbmc/guilib/guiinfo/GUIInfoLabels.h b/xbmc/guilib/guiinfo/GUIInfoLabels.h
+diff --color -ruN xbmc.orig/guilib/guiinfo/GUIInfoLabels.h xbmc/guilib/guiinfo/GUIInfoLabels.h
 --- a/xbmc/guilib/guiinfo/GUIInfoLabels.h	2025-12-22 17:28:39
-+++ b/xbmc/guilib/guiinfo/GUIInfoLabels.h	2025-12-22 17:28:52
++++ b/xbmc/guilib/guiinfo/GUIInfoLabels.h	2025-12-22 17:39:18
 @@ -981,6 +981,19 @@
  #define LISTITEM_VIDEOVERSION_NAME  (LISTITEM_START + 215)
  #define LISTITEM_HASVIDEOEXTRAS     (LISTITEM_START + 216)
  
 +// Extended metadata InfoLabels (CoreELEC extension)
 +// These provide direct access to specific ratings in list views
++// Note: LISTITEM_STATUS already exists (177) for TV show status
 +#define LISTITEM_IMDB_RATING        (LISTITEM_START + 220)
 +#define LISTITEM_TMDB_RATING        (LISTITEM_START + 221)
 +#define LISTITEM_RT_RATING          (LISTITEM_START + 222)
 +#define LISTITEM_METACRITIC_RATING  (LISTITEM_START + 223)
 +#define LISTITEM_TRAKT_RATING       (LISTITEM_START + 224)
-+#define LISTITEM_TVSHOW_STATUS      (LISTITEM_START + 225)
-+#define LISTITEM_NEXT_AIRED         (LISTITEM_START + 226)
-+#define LISTITEM_TOTAL_SEASONS_EXT  (LISTITEM_START + 227)
-+#define LISTITEM_TOTAL_EPISODES_EXT (LISTITEM_START + 228)
-+#define LISTITEM_NETWORK            (LISTITEM_START + 229)
++#define LISTITEM_NEXT_AIRED         (LISTITEM_START + 225)
++#define LISTITEM_TOTAL_SEASONS_EXT  (LISTITEM_START + 226)
++#define LISTITEM_TOTAL_EPISODES_EXT (LISTITEM_START + 227)
++#define LISTITEM_NETWORK            (LISTITEM_START + 228)
 +
  #define LISTITEM_END                (LISTITEM_START + 2500)
  
  #define CONDITIONAL_LABEL_START       (LISTITEM_END + 1) // 37501
-diff --git a/xbmc/guilib/guiinfo/VideoGUIInfo.cpp b/xbmc/guilib/guiinfo/VideoGUIInfo.cpp
+diff --color -ruN xbmc.orig/guilib/guiinfo/VideoGUIInfo.cpp xbmc/guilib/guiinfo/VideoGUIInfo.cpp
 --- a/xbmc/guilib/guiinfo/VideoGUIInfo.cpp	2025-12-22 17:28:39
-+++ b/xbmc/guilib/guiinfo/VideoGUIInfo.cpp	2025-12-22 17:29:23
-@@ -171,6 +171,68 @@
++++ b/xbmc/guilib/guiinfo/VideoGUIInfo.cpp	2025-12-22 17:39:45
+@@ -171,6 +171,66 @@
          if (!info.GetData3().empty())
            value = tag->GetUniqueID(info.GetData3());
          return true;
@@ -87,9 +87,7 @@ diff --git a/xbmc/guilib/guiinfo/VideoGUIInfo.cpp b/xbmc/guilib/guiinfo/VideoGUI
 +          return true;
 +        }
 +        return false;
-+      case LISTITEM_TVSHOW_STATUS:
-+        value = tag->m_strStatus;
-+        return !value.empty();
++      // Note: LISTITEM_STATUS (native) already handles TV show status via m_strStatus
 +      case LISTITEM_NEXT_AIRED:
 +        value = tag->m_strNextAired;
 +        return !value.empty();
@@ -114,20 +112,21 @@ diff --git a/xbmc/guilib/guiinfo/VideoGUIInfo.cpp b/xbmc/guilib/guiinfo/VideoGUI
        case VIDEOPLAYER_RATING:
        case LISTITEM_RATING:
        {
-diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
+diff --color -ruN xbmc.orig/video/VideoDatabase.cpp xbmc/video/VideoDatabase.cpp
 --- a/xbmc/video/VideoDatabase.cpp	2025-12-22 17:28:39
-+++ b/xbmc/video/VideoDatabase.cpp	2025-12-22 17:32:40
-@@ -138,6 +138,9 @@
++++ b/xbmc/video/VideoDatabase.cpp	2025-12-22 17:41:00
+@@ -138,6 +138,10 @@
    for (int i = 0; i < VIDEODB_MAX_COLUMNS; i++)
      columns += StringUtils::Format(",c{:02} text", i);
  
 +  // Extended metadata columns (CoreELEC extension)
-+  columns += ", status TEXT, next_aired TEXT, total_seasons_ext INTEGER";
++  // Note: status is already in c02 (VIDEODB_ID_TV_STATUS)
++  columns += ", next_aired TEXT, total_seasons_ext INTEGER";
 +  columns += ", total_episodes_ext INTEGER, network TEXT";
    columns += ", userrating integer, duration INTEGER)";
    m_pDS->exec(columns);
  
-@@ -197,6 +200,11 @@
+@@ -197,6 +201,11 @@
    CLog::Log(LOGINFO, "create rating table");
    m_pDS->exec("CREATE TABLE rating (rating_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, rating_type TEXT, rating FLOAT, votes INTEGER)");
  
@@ -139,7 +138,7 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
    CLog::Log(LOGINFO, "create uniqueid table");
    m_pDS->exec("CREATE TABLE uniqueid (uniqueid_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, value TEXT, type TEXT)");
  
-@@ -392,7 +400,18 @@
+@@ -392,7 +401,18 @@
                                        "  rating.votes AS votes, "
                                        "  rating.rating_type AS rating_type, "
                                        "  uniqueid.value AS uniqueid_value, "
@@ -159,7 +158,7 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
                                        "FROM episode"
                                        "  JOIN files ON"
                                        "    files.idFile=episode.idFile"
-@@ -462,7 +481,20 @@
+@@ -462,7 +482,20 @@
                                       "  rating.rating_type AS rating_type, "
                                       "  uniqueid.value AS uniqueid_value, "
                                       "  uniqueid.type AS uniqueid_type, "
@@ -173,7 +172,7 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
 +                                     "  (SELECT r.rating FROM rating r WHERE r.media_id = tvshow.idShow "
 +                                     "   AND r.media_type = 'tvshow' AND r.rating_type = 'trakt' LIMIT 1) AS trakt_rating, "
 +                                     // Extended metadata columns from tvshow table (CoreELEC extension)
-+                                     "  tvshow.status AS tvshow_status, "
++                                     // Note: status is already in c02 via tvshow.*
 +                                     "  tvshow.next_aired AS tvshow_next_aired, "
 +                                     "  tvshow.total_seasons_ext AS tvshow_total_seasons_ext, "
 +                                     "  tvshow.total_episodes_ext AS tvshow_total_episodes_ext, "
@@ -181,7 +180,7 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
                                       "FROM tvshow"
                                       "  LEFT JOIN tvshowlinkpath_minview ON "
                                       "    tvshowlinkpath_minview.idShow=tvshow.idShow"
-@@ -593,7 +625,18 @@
+@@ -593,7 +626,18 @@
                   "  vv.idFile AS videoVersionIdFile, "
                   "  vvt.id AS videoVersionTypeId,"
                   "  vvt.name AS videoVersionTypeName,"
@@ -201,7 +200,7 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
                   "FROM movie"
                   "  LEFT JOIN sets ON"
                   "    sets.idSet = movie.idSet"
-@@ -4370,6 +4413,14 @@
+@@ -4370,6 +4414,14 @@
                      record->at(VIDEODB_DETAILS_MOVIE_VOTES).get_asInt(),
                      record->at(VIDEODB_DETAILS_MOVIE_RATING_TYPE).get_asString(), true);
    details.SetUniqueID(record->at(VIDEODB_DETAILS_MOVIE_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_MOVIE_UNIQUEID_TYPE).get_asString() ,true);
@@ -216,16 +215,16 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
    std::string premieredString = record->at(VIDEODB_DETAILS_MOVIE_PREMIERED).get_asString();
    if (premieredString.size() == 4)
      details.SetYear(record->at(VIDEODB_DETAILS_MOVIE_PREMIERED).get_asInt());
-@@ -4446,6 +4497,17 @@
+@@ -4446,6 +4498,17 @@
                      record->at(VIDEODB_DETAILS_TVSHOW_VOTES).get_asInt(),
                      record->at(VIDEODB_DETAILS_TVSHOW_RATING_TYPE).get_asString(), true);
    details.SetUniqueID(record->at(VIDEODB_DETAILS_TVSHOW_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_TVSHOW_UNIQUEID_TYPE).get_asString(), true);
 +
-+  // Extended metadata: read specific ratings and status from view columns (CoreELEC extension)
++  // Extended metadata: read specific ratings from view columns (CoreELEC extension)
++  // Note: m_strStatus is already populated via GetDetailsFromDB from c02
 +  details.m_fImdbRating = record->at(VIDEODB_DETAILS_TVSHOW_IMDB_RATING).get_asFloat();
 +  details.m_fTmdbRating = record->at(VIDEODB_DETAILS_TVSHOW_TMDB_RATING).get_asFloat();
 +  details.m_fTraktRating = record->at(VIDEODB_DETAILS_TVSHOW_TRAKT_RATING).get_asFloat();
-+  details.m_strStatus = record->at(VIDEODB_DETAILS_TVSHOW_STATUS).get_asString();
 +  details.m_strNextAired = record->at(VIDEODB_DETAILS_TVSHOW_NEXT_AIRED).get_asString();
 +  details.m_iTotalSeasonsExt = record->at(VIDEODB_DETAILS_TVSHOW_TOTAL_SEASONS_EXT).get_asInt();
 +  details.m_iTotalEpisodesExt = record->at(VIDEODB_DETAILS_TVSHOW_TOTAL_EPISODES_EXT).get_asInt();
@@ -234,23 +233,55 @@ diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
    details.SetDuration(record->at(VIDEODB_DETAILS_TVSHOW_DURATION).get_asInt());
  
    //! @todo videotag member + guiinfo int needed?
-@@ -4548,6 +4610,13 @@
-                     record->at(VIDEODB_DETAILS_EPISODE_VOTES).get_asInt(),
+@@ -4549,6 +4612,13 @@
                      record->at(VIDEODB_DETAILS_EPISODE_RATING_TYPE).get_asString(), true);
    details.SetUniqueID(record->at(VIDEODB_DETAILS_EPISODE_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_EPISODE_UNIQUEID_TYPE).get_asString(), true);
-+
+ 
 +  // Extended metadata: read specific ratings from view columns (CoreELEC extension)
 +  details.m_fImdbRating = record->at(VIDEODB_DETAILS_EPISODE_IMDB_RATING).get_asFloat();
 +  details.m_fTmdbRating = record->at(VIDEODB_DETAILS_EPISODE_TMDB_RATING).get_asFloat();
 +  details.m_fRtRating = record->at(VIDEODB_DETAILS_EPISODE_RT_RATING).get_asFloat();
 +  details.m_fMetacriticRating = record->at(VIDEODB_DETAILS_EPISODE_METACRITIC_RATING).get_asFloat();
 +  details.m_fTraktRating = record->at(VIDEODB_DETAILS_EPISODE_TRAKT_RATING).get_asFloat();
- 
++
    if (getDetails)
    {
-diff --git a/xbmc/video/VideoDatabase.h b/xbmc/video/VideoDatabase.h
+     if (getDetails & VideoDbDetailsCast)
+@@ -6392,11 +6462,30 @@
+     }
+     m_pDS->close();
+   }
++
++  // CoreELEC extension: Extended metadata columns and tables
++  if (iVersion < 132)
++  {
++    CLog::Log(LOGINFO, "Migrating to schema version 132 - CoreELEC extended metadata");
++
++    // Add extended columns to tvshow table (status already in c02, skip it)
++    m_pDS->exec("ALTER TABLE tvshow ADD COLUMN next_aired TEXT");
++    m_pDS->exec("ALTER TABLE tvshow ADD COLUMN total_seasons_ext INTEGER");
++    m_pDS->exec("ALTER TABLE tvshow ADD COLUMN total_episodes_ext INTEGER");
++    m_pDS->exec("ALTER TABLE tvshow ADD COLUMN network TEXT");
++
++    // Create network tables
++    m_pDS->exec("CREATE TABLE IF NOT EXISTS network (network_id INTEGER PRIMARY KEY, name TEXT UNIQUE)");
++    m_pDS->exec("CREATE TABLE IF NOT EXISTS network_link (network_id INTEGER, media_id INTEGER, media_type TEXT, link_order INTEGER DEFAULT 0)");
++
++    // Recreate views with extended rating subqueries
++    CreateViews();
++  }
+ }
+ 
+ int CVideoDatabase::GetSchemaVersion() const
+ {
+-  return 131;
++  return 132;
+ }
+ 
+ bool CVideoDatabase::LookupByFolders(const std::string &path, bool shows)
+diff --color -ruN xbmc.orig/video/VideoDatabase.h xbmc/video/VideoDatabase.h
 --- a/xbmc/video/VideoDatabase.h	2025-12-22 17:28:39
-+++ b/xbmc/video/VideoDatabase.h	2025-12-22 17:30:19
++++ b/xbmc/video/VideoDatabase.h	2025-12-22 17:40:32
 @@ -106,6 +106,13 @@
  #define VIDEODB_DETAILS_MOVIE_VERSION_TYPENAME VIDEODB_MAX_COLUMNS + 25
  #define VIDEODB_DETAILS_MOVIE_VERSION_ITEMTYPE VIDEODB_MAX_COLUMNS + 26
@@ -285,20 +316,20 @@ diff --git a/xbmc/video/VideoDatabase.h b/xbmc/video/VideoDatabase.h
  #define VIDEODB_DETAILS_TVSHOW_NUM_INPROGRESS VIDEODB_MAX_COLUMNS + 15
 +
 +// Extended metadata columns for TV shows (CoreELEC extension)
++// Note: status is already in c02 via VIDEODB_ID_TV_STATUS, no separate column needed
 +#define VIDEODB_DETAILS_TVSHOW_IMDB_RATING       VIDEODB_MAX_COLUMNS + 16
 +#define VIDEODB_DETAILS_TVSHOW_TMDB_RATING       VIDEODB_MAX_COLUMNS + 17
 +#define VIDEODB_DETAILS_TVSHOW_TRAKT_RATING      VIDEODB_MAX_COLUMNS + 18
-+#define VIDEODB_DETAILS_TVSHOW_STATUS            VIDEODB_MAX_COLUMNS + 19
-+#define VIDEODB_DETAILS_TVSHOW_NEXT_AIRED        VIDEODB_MAX_COLUMNS + 20
-+#define VIDEODB_DETAILS_TVSHOW_TOTAL_SEASONS_EXT VIDEODB_MAX_COLUMNS + 21
-+#define VIDEODB_DETAILS_TVSHOW_TOTAL_EPISODES_EXT VIDEODB_MAX_COLUMNS + 22
-+#define VIDEODB_DETAILS_TVSHOW_NETWORK           VIDEODB_MAX_COLUMNS + 23
++#define VIDEODB_DETAILS_TVSHOW_NEXT_AIRED        VIDEODB_MAX_COLUMNS + 19
++#define VIDEODB_DETAILS_TVSHOW_TOTAL_SEASONS_EXT VIDEODB_MAX_COLUMNS + 20
++#define VIDEODB_DETAILS_TVSHOW_TOTAL_EPISODES_EXT VIDEODB_MAX_COLUMNS + 21
++#define VIDEODB_DETAILS_TVSHOW_NETWORK           VIDEODB_MAX_COLUMNS + 22
  
  #define VIDEODB_DETAILS_MUSICVIDEO_USER_RATING  VIDEODB_MAX_COLUMNS + 2
  #define VIDEODB_DETAILS_MUSICVIDEO_PREMIERED    VIDEODB_MAX_COLUMNS + 3
-diff --git a/xbmc/video/VideoInfoTag.h b/xbmc/video/VideoInfoTag.h
+diff --color -ruN xbmc.orig/video/VideoInfoTag.h xbmc/video/VideoInfoTag.h
 --- a/xbmc/video/VideoInfoTag.h	2025-12-22 17:28:39
-+++ b/xbmc/video/VideoInfoTag.h	2025-12-22 17:29:48
++++ b/xbmc/video/VideoInfoTag.h	2025-12-22 17:37:43
 @@ -388,6 +388,21 @@
    std::vector<std::string> m_showLink;
    std::map<int, std::string> m_namedSeasons;
@@ -312,7 +343,7 @@ diff --git a/xbmc/video/VideoInfoTag.h b/xbmc/video/VideoInfoTag.h
 +  float m_fRtRating = 0.0f;         // Rotten Tomatoes (tomatometerallcritics)
 +  float m_fMetacriticRating = 0.0f;
 +  float m_fTraktRating = 0.0f;
-+  std::string m_strStatus;          // TV show status (Returning Series, Ended, etc.)
++  // Note: m_strStatus already exists above, reuse it for TV show status
 +  std::string m_strNextAired;       // Next episode air date (ISO format)
 +  std::string m_strNetwork;         // TV network(s), comma-separated
 +  int m_iTotalSeasonsExt = 0;       // Total seasons from external source
