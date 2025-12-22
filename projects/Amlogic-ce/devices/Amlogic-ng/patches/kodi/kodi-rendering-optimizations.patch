@@ -1,113 +1,5 @@
-From 368acd7794a416fb67fbd43cfb1106967cf60835 Mon Sep 17 00:00:00 2001
-From: Corentin Barreau <corentin.barreau@mistral.ai>
-Date: Mon, 22 Dec 2025 01:45:11 +0100
-Subject: [PATCH] Backport front-to-back rendering prerequisites + main PR
-
----
- system/shaders/GL/1.2/gl_shader_vert.glsl     |   2 +
- .../shaders/GL/1.2/gl_shader_vert_clip.glsl   |  43 ++++++
- .../GL/1.2/gl_shader_vert_default.glsl        |   1 +
- .../shaders/GL/1.2/gl_shader_vert_simple.glsl |  28 ++++
- system/shaders/GL/1.2/gl_yuv2rgb_vertex.glsl  |   1 +
- system/shaders/GL/1.5/gl_shader_vert.glsl     |   2 +
- .../shaders/GL/1.5/gl_shader_vert_clip.glsl   |  43 ++++++
- .../GL/1.5/gl_shader_vert_default.glsl        |   1 +
- .../shaders/GL/1.5/gl_shader_vert_simple.glsl |  28 ++++
- system/shaders/GL/1.5/gl_yuv2rgb_vertex.glsl  |   1 +
- system/shaders/GLES/2.0/gles_shader.vert      |   2 +
- system/shaders/GLES/2.0/gles_shader_clip.vert |  43 ++++++
- .../shaders/GLES/2.0/gles_shader_simple.vert  |  30 +++++
- system/shaders/GLES/2.0/gles_yuv2rgb.vert     |   1 +
- .../RetroPlayer/rendering/RenderContext.cpp   |  15 +++
- .../RetroPlayer/rendering/RenderContext.h     |   1 +
- .../VideoRenderers/RPRendererDMA.cpp          |   2 +
- .../VideoRenderers/RPRendererGuiTexture.cpp   |   4 +
- .../VideoRenderers/RPRendererOpenGL.cpp       |   2 +
- .../VideoRenderers/RPRendererOpenGLES.cpp     |   4 +
- .../VideoRenderers/DebugRenderer.cpp          |   2 +-
- .../VideoRenderers/DebugRenderer.h            |   2 +-
- .../HwDecRender/RendererDRMPRIMEGLES.cpp      |   5 +
- .../HwDecRender/RendererMediaCodec.cpp        |   4 +-
- .../VideoRenderers/LinuxRendererGL.cpp        |  57 +++++++-
- .../VideoRenderers/LinuxRendererGL.h          |   1 +
- .../VideoRenderers/LinuxRendererGLES.cpp      |  82 ++++++++++--
- .../VideoRenderers/LinuxRendererGLES.h        |   4 +-
- .../VideoRenderers/OverlayRenderer.cpp        |   2 +-
- .../VideoRenderers/OverlayRenderer.h          |   2 +-
- .../VideoRenderers/OverlayRendererGL.cpp      |  11 ++
- .../VideoRenderers/OverlayRendererGLES.cpp    |  10 ++
- xbmc/guilib/GUIBaseContainer.cpp              |  57 +++++++-
- xbmc/guilib/GUIBaseContainer.h                |   9 ++
- xbmc/guilib/GUIBorderedImage.cpp              |  12 +-
- xbmc/guilib/GUIButtonControl.cpp              |  18 ++-
- xbmc/guilib/GUIControl.cpp                    |   5 +
- xbmc/guilib/GUIControl.h                      |   1 +
- xbmc/guilib/GUIControlGroup.cpp               |  41 +++++-
- xbmc/guilib/GUIControlGroup.h                 |   1 +
- xbmc/guilib/GUIEditControl.cpp                |   3 +
- xbmc/guilib/GUIFadeLabelControl.cpp           |  10 ++
- xbmc/guilib/GUIFadeLabelControl.h             |   4 +
- xbmc/guilib/GUIFont.cpp                       |  16 +--
- xbmc/guilib/GUIFontTTF.cpp                    |  93 +++++++++++--
- xbmc/guilib/GUIFontTTF.h                      |  12 +-
- xbmc/guilib/GUIFontTTFGL.cpp                  | 125 +++++++++++-------
- xbmc/guilib/GUIFontTTFGL.h                    |   4 +-
- xbmc/guilib/GUIFontTTFGLES.cpp                | 107 +++++++++------
- xbmc/guilib/GUIFontTTFGLES.h                  |   1 +
- xbmc/guilib/GUILabelControl.cpp               |   3 +
- xbmc/guilib/GUIListItemLayout.cpp             |   5 +
- xbmc/guilib/GUIListItemLayout.h               |   1 +
- xbmc/guilib/GUIListLabel.cpp                  |   3 +
- xbmc/guilib/GUIPanelContainer.cpp             |  29 +++-
- xbmc/guilib/GUISettingsSliderControl.cpp      |   3 +
- xbmc/guilib/GUISpinControl.cpp                |   3 +
- xbmc/guilib/GUITextBox.cpp                    |  10 ++
- xbmc/guilib/GUITextBox.h                      |   1 +
- xbmc/guilib/GUITexture.cpp                    |  55 ++++++--
- xbmc/guilib/GUITexture.h                      |  15 ++-
- xbmc/guilib/GUITextureD3D.cpp                 |   4 +-
- xbmc/guilib/GUITextureD3D.h                   |   4 +-
- xbmc/guilib/GUITextureGL.cpp                  |  20 ++-
- xbmc/guilib/GUITextureGL.h                    |   4 +-
- xbmc/guilib/GUITextureGLES.cpp                |  20 ++-
- xbmc/guilib/GUITextureGLES.h                  |   4 +-
- xbmc/guilib/GUIVideoControl.cpp               |  14 +-
- xbmc/guilib/GUIWindow.cpp                     |   2 +
- xbmc/guilib/GUIWindowManager.cpp              |  56 ++++++++
- xbmc/guilib/GUIWindowManager.h                |   6 +
- xbmc/pictures/SlideShowPicture.cpp            |   3 +
- xbmc/pictures/SlideShowPictureGL.cpp          |   2 +
- xbmc/pictures/SlideShowPictureGLES.cpp        |   2 +
- xbmc/pvr/guilib/GUIEPGGridContainer.cpp       | 120 +++++++++++++++--
- xbmc/pvr/guilib/GUIEPGGridContainer.h         |  25 +++-
- xbmc/rendering/RenderSystem.h                 |  10 ++
- xbmc/rendering/gl/GLShader.cpp                |   7 +-
- xbmc/rendering/gl/GLShader.h                  |  10 +-
- xbmc/rendering/gl/RenderSystemGL.cpp          | 111 +++++++++++++++-
- xbmc/rendering/gl/RenderSystemGL.h            |  11 +-
- xbmc/rendering/gles/GLESShader.cpp            |   4 +
- xbmc/rendering/gles/GLESShader.h              |   8 ++
- xbmc/rendering/gles/RenderSystemGLES.cpp      |  97 +++++++++++++-
- xbmc/rendering/gles/RenderSystemGLES.h        |   9 ++
- xbmc/settings/AdvancedSettings.cpp            |   4 +-
- xbmc/settings/AdvancedSettings.h              |   4 +-
- xbmc/utils/TransformMatrix.h                  |  12 ++
- xbmc/video/dialogs/GUIDialogTeletext.cpp      |   5 +-
- xbmc/video/windows/GUIWindowFullScreen.cpp    |  21 ++-
- xbmc/windowing/GraphicContext.cpp             |  39 ++++++
- xbmc/windowing/GraphicContext.h               |  46 ++++++-
- xbmc/windowing/X11/GLContextEGL.cpp           |   2 +-
- xbmc/windows/GUIWindowDebugInfo.cpp           |   6 +
- 94 files changed, 1555 insertions(+), 220 deletions(-)
- create mode 100644 system/shaders/GL/1.2/gl_shader_vert_clip.glsl
- create mode 100644 system/shaders/GL/1.2/gl_shader_vert_simple.glsl
- create mode 100644 system/shaders/GL/1.5/gl_shader_vert_clip.glsl
- create mode 100644 system/shaders/GL/1.5/gl_shader_vert_simple.glsl
- create mode 100644 system/shaders/GLES/2.0/gles_shader_clip.vert
- create mode 100644 system/shaders/GLES/2.0/gles_shader_simple.vert
-
 diff --git a/system/shaders/GL/1.2/gl_shader_vert.glsl b/system/shaders/GL/1.2/gl_shader_vert.glsl
-index 7c10b5f1bf..fef2d2d94e 100644
+index 7c10b5f1b..fef2d2d94 100644
 --- a/system/shaders/GL/1.2/gl_shader_vert.glsl
 +++ b/system/shaders/GL/1.2/gl_shader_vert.glsl
 @@ -29,11 +29,13 @@ varying vec4 m_cord1;
@@ -126,7 +18,7 @@ index 7c10b5f1bf..fef2d2d94e 100644
    m_cord1     = m_attrcord1;
 diff --git a/system/shaders/GL/1.2/gl_shader_vert_clip.glsl b/system/shaders/GL/1.2/gl_shader_vert_clip.glsl
 new file mode 100644
-index 0000000000..959f8ad46b
+index 000000000..959f8ad46
 --- /dev/null
 +++ b/system/shaders/GL/1.2/gl_shader_vert_clip.glsl
 @@ -0,0 +1,43 @@
@@ -174,7 +66,7 @@ index 0000000000..959f8ad46b
 +  m_colour = m_attrcol;
 +}
 diff --git a/system/shaders/GL/1.2/gl_shader_vert_default.glsl b/system/shaders/GL/1.2/gl_shader_vert_default.glsl
-index 554e15c3fd..bbb06cb5fe 100644
+index 554e15c3f..bbb06cb5f 100644
 --- a/system/shaders/GL/1.2/gl_shader_vert_default.glsl
 +++ b/system/shaders/GL/1.2/gl_shader_vert_default.glsl
 @@ -28,4 +28,5 @@ void main ()
@@ -185,7 +77,7 @@ index 554e15c3fd..bbb06cb5fe 100644
  }
 diff --git a/system/shaders/GL/1.2/gl_shader_vert_simple.glsl b/system/shaders/GL/1.2/gl_shader_vert_simple.glsl
 new file mode 100644
-index 0000000000..91fbae0b75
+index 000000000..91fbae0b7
 --- /dev/null
 +++ b/system/shaders/GL/1.2/gl_shader_vert_simple.glsl
 @@ -0,0 +1,28 @@
@@ -218,7 +110,7 @@ index 0000000000..91fbae0b75
 +  m_cord1     = m_attrcord1;
 +}
 diff --git a/system/shaders/GL/1.2/gl_yuv2rgb_vertex.glsl b/system/shaders/GL/1.2/gl_yuv2rgb_vertex.glsl
-index cdf3c56a71..8d7e0c3530 100644
+index cdf3c56a7..8d7e0c353 100644
 --- a/system/shaders/GL/1.2/gl_yuv2rgb_vertex.glsl
 +++ b/system/shaders/GL/1.2/gl_yuv2rgb_vertex.glsl
 @@ -32,6 +32,7 @@ void main ()
@@ -230,7 +122,7 @@ index cdf3c56a71..8d7e0c3530 100644
    m_cordU     = m_attrcordU;
    m_cordV     = m_attrcordV;
 diff --git a/system/shaders/GL/1.5/gl_shader_vert.glsl b/system/shaders/GL/1.5/gl_shader_vert.glsl
-index a8568310c2..c66c804788 100644
+index a8568310c..c66c80478 100644
 --- a/system/shaders/GL/1.5/gl_shader_vert.glsl
 +++ b/system/shaders/GL/1.5/gl_shader_vert.glsl
 @@ -9,11 +9,13 @@ out vec4 m_cord1;
@@ -249,7 +141,7 @@ index a8568310c2..c66c804788 100644
    m_cord1     = m_attrcord1;
 diff --git a/system/shaders/GL/1.5/gl_shader_vert_clip.glsl b/system/shaders/GL/1.5/gl_shader_vert_clip.glsl
 new file mode 100644
-index 0000000000..0cb2a8f1d8
+index 000000000..0cb2a8f1d
 --- /dev/null
 +++ b/system/shaders/GL/1.5/gl_shader_vert_clip.glsl
 @@ -0,0 +1,43 @@
@@ -297,7 +189,7 @@ index 0000000000..0cb2a8f1d8
 +  m_colour = m_attrcol;
 +}
 diff --git a/system/shaders/GL/1.5/gl_shader_vert_default.glsl b/system/shaders/GL/1.5/gl_shader_vert_default.glsl
-index e4f2d7c9ee..b68ef12925 100644
+index e4f2d7c9e..b68ef1292 100644
 --- a/system/shaders/GL/1.5/gl_shader_vert_default.glsl
 +++ b/system/shaders/GL/1.5/gl_shader_vert_default.glsl
 @@ -8,4 +8,5 @@ void main ()
@@ -308,7 +200,7 @@ index e4f2d7c9ee..b68ef12925 100644
  }
 diff --git a/system/shaders/GL/1.5/gl_shader_vert_simple.glsl b/system/shaders/GL/1.5/gl_shader_vert_simple.glsl
 new file mode 100644
-index 0000000000..953cdfcf8b
+index 000000000..953cdfcf8
 --- /dev/null
 +++ b/system/shaders/GL/1.5/gl_shader_vert_simple.glsl
 @@ -0,0 +1,28 @@
@@ -341,7 +233,7 @@ index 0000000000..953cdfcf8b
 +  m_cord1     = m_attrcord1;
 +}
 diff --git a/system/shaders/GL/1.5/gl_yuv2rgb_vertex.glsl b/system/shaders/GL/1.5/gl_yuv2rgb_vertex.glsl
-index 4772bd4172..257aacfcc2 100644
+index 4772bd417..257aacfcc 100644
 --- a/system/shaders/GL/1.5/gl_yuv2rgb_vertex.glsl
 +++ b/system/shaders/GL/1.5/gl_yuv2rgb_vertex.glsl
 @@ -14,6 +14,7 @@ void main ()
@@ -353,7 +245,7 @@ index 4772bd4172..257aacfcc2 100644
    m_cordU = m_attrcordU;
    m_cordV = m_attrcordV;
 diff --git a/system/shaders/GLES/2.0/gles_shader.vert b/system/shaders/GLES/2.0/gles_shader.vert
-index 890acbbb81..17b4ad7b48 100644
+index 890acbbb8..17b4ad7b4 100644
 --- a/system/shaders/GLES/2.0/gles_shader.vert
 +++ b/system/shaders/GLES/2.0/gles_shader.vert
 @@ -30,11 +30,13 @@ varying lowp vec4 m_colour;
@@ -372,7 +264,7 @@ index 890acbbb81..17b4ad7b48 100644
    m_cord1 = m_attrcord1;
 diff --git a/system/shaders/GLES/2.0/gles_shader_clip.vert b/system/shaders/GLES/2.0/gles_shader_clip.vert
 new file mode 100644
-index 0000000000..1b1cf3f91e
+index 000000000..1b1cf3f91
 --- /dev/null
 +++ b/system/shaders/GLES/2.0/gles_shader_clip.vert
 @@ -0,0 +1,43 @@
@@ -421,7 +313,7 @@ index 0000000000..1b1cf3f91e
 +}
 diff --git a/system/shaders/GLES/2.0/gles_shader_simple.vert b/system/shaders/GLES/2.0/gles_shader_simple.vert
 new file mode 100644
-index 0000000000..2f34f8bf28
+index 000000000..2f34f8bf2
 --- /dev/null
 +++ b/system/shaders/GLES/2.0/gles_shader_simple.vert
 @@ -0,0 +1,30 @@
@@ -456,7 +348,7 @@ index 0000000000..2f34f8bf28
 +  m_cord1     = m_attrcord1;
 +}
 diff --git a/system/shaders/GLES/2.0/gles_yuv2rgb.vert b/system/shaders/GLES/2.0/gles_yuv2rgb.vert
-index bc437afdc3..c96a6a9585 100644
+index bc437afdc..c96a6a958 100644
 --- a/system/shaders/GLES/2.0/gles_yuv2rgb.vert
 +++ b/system/shaders/GLES/2.0/gles_yuv2rgb.vert
 @@ -34,6 +34,7 @@ void main ()
@@ -467,8 +359,47 @@ index bc437afdc3..c96a6a9585 100644
    m_cordY = m_attrcordY;
    m_cordU = m_attrcordU;
    m_cordV = m_attrcordV;
+diff --git a/xbmc/GUILargeTextureManager.cpp b/xbmc/GUILargeTextureManager.cpp
+index 80b762b20..6a3bfc6a8 100644
+--- a/xbmc/GUILargeTextureManager.cpp
++++ b/xbmc/GUILargeTextureManager.cpp
+@@ -13,6 +13,8 @@
+ #include "commons/ilog.h"
+ #include "guilib/GUIComponent.h"
+ #include "guilib/Texture.h"
++#include "settings/AdvancedSettings.h"
++#include "settings/SettingsComponent.h"
+ #include "utils/JobManager.h"
+ #include "utils/TimeUtils.h"
+ #include "utils/log.h"
+@@ -65,6 +67,9 @@ bool CImageLoader::DoWork()
+       if (needsChecking)
+         CServiceBroker::GetTextureCache()->BackgroundCacheImage(texturePath);
+ 
++      if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_guiAsyncTextureUpload)
++        m_texture->LoadToGPUAsync();
++
+       return true;
+     }
+ 
+@@ -77,7 +82,14 @@ bool CImageLoader::DoWork()
+ 
+   // not in our texture cache or it failed to load from it, so try and load directly and then cache the result
+   CServiceBroker::GetTextureCache()->CacheImage(texturePath, &m_texture);
+-  return (m_texture != NULL);
++
++  if (!m_texture)
++    return false;
++
++  if (CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_guiAsyncTextureUpload)
++    m_texture->LoadToGPUAsync();
++
++  return true;
+ }
+ 
+ CGUILargeTextureManager::CLargeTexture::CLargeTexture(const std::string &path):
 diff --git a/xbmc/cores/RetroPlayer/rendering/RenderContext.cpp b/xbmc/cores/RetroPlayer/rendering/RenderContext.cpp
-index bc5d50fee6..db954e985e 100644
+index bc5d50fee..db954e985 100644
 --- a/xbmc/cores/RetroPlayer/rendering/RenderContext.cpp
 +++ b/xbmc/cores/RetroPlayer/rendering/RenderContext.cpp
 @@ -184,6 +184,21 @@ int CRenderContext::GUIShaderGetUniCol()
@@ -494,7 +425,7 @@ index bc5d50fee6..db954e985e 100644
  {
  #if defined(HAS_DX)
 diff --git a/xbmc/cores/RetroPlayer/rendering/RenderContext.h b/xbmc/cores/RetroPlayer/rendering/RenderContext.h
-index 3f0c4c7524..0058c70b12 100644
+index 3f0c4c752..0058c70b1 100644
 --- a/xbmc/cores/RetroPlayer/rendering/RenderContext.h
 +++ b/xbmc/cores/RetroPlayer/rendering/RenderContext.h
 @@ -69,6 +69,7 @@ public:
@@ -506,7 +437,7 @@ index 3f0c4c7524..0058c70b12 100644
    // DirectX rendering functions
    CGUIShaderDX* GetGUIShader();
 diff --git a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMA.cpp b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMA.cpp
-index 97a9eaa462..8b9886b835 100644
+index 97a9eaa46..8b9886b83 100644
 --- a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMA.cpp
 +++ b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererDMA.cpp
 @@ -85,6 +85,7 @@ void CRPRendererDMA::Render(uint8_t alpha)
@@ -526,7 +457,7 @@ index 97a9eaa462..8b9886b835 100644
  
    glDisableVertexAttribArray(vertLoc);
 diff --git a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererGuiTexture.cpp b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererGuiTexture.cpp
-index f38e24006c..7929140a8a 100644
+index f38e24006..7929140a8 100644
 --- a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererGuiTexture.cpp
 +++ b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererGuiTexture.cpp
 @@ -184,6 +184,7 @@ void CRPRendererGuiTexture::RenderInternal(bool clear, uint8_t alpha)
@@ -562,7 +493,7 @@ index f38e24006c..7929140a8a 100644
  
    glDisableVertexAttribArray(posLoc);
 diff --git a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGL.cpp b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGL.cpp
-index 49ff7f8ca8..c3ac4218dd 100644
+index 49ff7f8ca..c3ac4218d 100644
 --- a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGL.cpp
 +++ b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGL.cpp
 @@ -295,6 +295,7 @@ void CRPRendererOpenGL::Render(uint8_t alpha)
@@ -582,7 +513,7 @@ index 49ff7f8ca8..c3ac4218dd 100644
    glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, 0);
  
 diff --git a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.cpp b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.cpp
-index b8e4259147..d120ff7862 100644
+index b8e425914..d120ff786 100644
 --- a/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.cpp
 +++ b/xbmc/cores/RetroPlayer/rendering/VideoRenderers/RPRendererOpenGLES.cpp
 @@ -128,8 +128,10 @@ void CRPRendererOpenGLES::DrawBlackBars()
@@ -613,7 +544,7 @@ index b8e4259147..d120ff7862 100644
  
    glDisableVertexAttribArray(vertLoc);
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.cpp
-index 9a8f496f96..2277962600 100644
+index 9a8f496f9..227796260 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.cpp
 @@ -116,7 +116,7 @@ CDebugRenderer::CRenderer::CRenderer() : OVERLAY::CRenderer()
@@ -626,7 +557,7 @@ index 9a8f496f96..2277962600 100644
    std::vector<SElement>& list = m_buffers[idx];
    for (std::vector<SElement>::iterator it = list.begin(); it != list.end(); ++it)
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.h b/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.h
-index e5a08d306f..7a5c306150 100644
+index e5a08d306..7a5c30615 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.h
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/DebugRenderer.h
 @@ -34,7 +34,7 @@ protected:
@@ -639,7 +570,7 @@ index e5a08d306f..7a5c306150 100644
  
    private:
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererDRMPRIMEGLES.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererDRMPRIMEGLES.cpp
-index ed6052864b..e7adf42dce 100644
+index ed6052864..e7adf42dc 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererDRMPRIMEGLES.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererDRMPRIMEGLES.cpp
 @@ -224,8 +224,10 @@ void CRendererDRMPRIMEGLES::DrawBlackBars()
@@ -671,7 +602,7 @@ index ed6052864b..e7adf42dce 100644
  
    glDisableVertexAttribArray(vertLoc);
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodec.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodec.cpp
-index e06a81cf18..d37d61e08d 100644
+index e06a81cf1..d37d61e08 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodec.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/RendererMediaCodec.cpp
 @@ -112,8 +112,6 @@ bool CRendererMediaCodec::RenderHook(int index)
@@ -693,7 +624,7 @@ index e06a81cf18..d37d61e08d 100644
    glUniformMatrix4fv(renderSystem->GUIShaderGetCoord0Matrix(), 1, GL_FALSE, m_textureMatrix);
  
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.cpp
-index a7b37bc1fa..28a0a0c856 100644
+index a7b37bc1f..28a0a0c85 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.cpp
 @@ -532,9 +532,56 @@ void CLinuxRendererGL::RenderUpdate(int index, int index2, bool clear, unsigned
@@ -775,7 +706,7 @@ index a7b37bc1fa..28a0a0c856 100644
    glActiveTexture(GL_TEXTURE0);
    glBindTexture(m_textureTarget, planes[0].id);
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.h b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.h
-index b65f5d534c..e2c6905ea6 100644
+index b65f5d534..e2c6905ea 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.h
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGL.h
 @@ -87,6 +87,7 @@ protected:
@@ -787,7 +718,7 @@ index b65f5d534c..e2c6905ea6 100644
  
    bool ValidateRenderer();
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.cpp
-index c83e2f0576..aae85867c8 100644
+index c83e2f057..aae85867c 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.cpp
 @@ -359,6 +359,63 @@ void CLinuxRendererGLES::Update()
@@ -947,7 +878,7 @@ index c83e2f0576..aae85867c8 100644
    glActiveTexture(GL_TEXTURE0);
    glBindTexture(m_textureTarget, planes[0].id);
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h
-index 9a936a8e9a..973428db1d 100644
+index 9a936a8e9..973428db1 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h
 @@ -91,7 +91,7 @@ protected:
@@ -968,7 +899,7 @@ index 9a936a8e9a..973428db1d 100644
    void DrawBlackBars();
  };
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp
-index dfd4b31227..246128003a 100644
+index dfd4b3122..246128003 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.cpp
 @@ -138,7 +138,7 @@ void CRenderer::ReleaseUnused()
@@ -981,7 +912,7 @@ index dfd4b31227..246128003a 100644
    std::unique_lock<CCriticalSection> lock(m_section);
  
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h
-index a6690004e6..a79f601af5 100644
+index a6690004e..a79f601af 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRenderer.h
 @@ -99,7 +99,7 @@ namespace OVERLAY {
@@ -994,7 +925,7 @@ index a6690004e6..a79f601af5 100644
      /*!
       * \brief Release resources
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGL.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGL.cpp
-index 3caa28e4bf..7f2debce85 100644
+index 3caa28e4b..7f2debce8 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGL.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGL.cpp
 @@ -293,6 +293,12 @@ void COverlayGlyphGL::Render(SRenderState& state)
@@ -1037,7 +968,7 @@ index 3caa28e4bf..7f2debce85 100644
  
    glDisableVertexAttribArray(posLoc);
 diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGLES.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGLES.cpp
-index cf3b31324a..4f4b39b038 100644
+index cf3b31324..4f4b39b03 100644
 --- a/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGLES.cpp
 +++ b/xbmc/cores/VideoPlayer/VideoRenderers/OverlayRendererGLES.cpp
 @@ -352,6 +352,12 @@ void COverlayGlyphGLES::Render(SRenderState& state)
@@ -1078,8 +1009,28 @@ index cf3b31324a..4f4b39b038 100644
    // Setup vertex position values
    ver[0][0] = ver[3][0] = rd.x1;
    ver[0][1] = ver[1][1] = rd.y1;
+diff --git a/xbmc/guilib/CMakeLists.txt b/xbmc/guilib/CMakeLists.txt
+index 3e936cd9b..a4c3957f5 100644
+--- a/xbmc/guilib/CMakeLists.txt
++++ b/xbmc/guilib/CMakeLists.txt
+@@ -66,6 +66,7 @@ set(SOURCES DDSImage.cpp
+             TextureBundle.cpp
+             TextureBundleXBT.cpp
+             Texture.cpp
++            TextureBase.cpp
+             TextureManager.cpp
+             VisibleEffect.cpp
+             XBTF.cpp
+@@ -148,6 +149,7 @@ set(HEADERS DDSImage.h
+             LocalizeStrings.h
+             StereoscopicsManager.h
+             Texture.h
++            TextureBase.h
+             TextureBundle.h
+             TextureBundleXBT.h
+             TextureManager.h
 diff --git a/xbmc/guilib/GUIBaseContainer.cpp b/xbmc/guilib/GUIBaseContainer.cpp
-index 897459790d..3eff509693 100644
+index 897459790..3eff50969 100644
 --- a/xbmc/guilib/GUIBaseContainer.cpp
 +++ b/xbmc/guilib/GUIBaseContainer.cpp
 @@ -285,6 +285,8 @@ void CGUIBaseContainer::Render()
@@ -1170,7 +1121,7 @@ index 897459790d..3eff509693 100644
  {
    if (m_listProvider)
 diff --git a/xbmc/guilib/GUIBaseContainer.h b/xbmc/guilib/GUIBaseContainer.h
-index 38e68cf51d..15f63048fa 100644
+index 38e68cf51..15f63048f 100644
 --- a/xbmc/guilib/GUIBaseContainer.h
 +++ b/xbmc/guilib/GUIBaseContainer.h
 @@ -50,6 +50,7 @@ public:
@@ -1197,7 +1148,7 @@ index 38e68cf51d..15f63048fa 100644
    bool OnContextMenu();
  
 diff --git a/xbmc/guilib/GUIBorderedImage.cpp b/xbmc/guilib/GUIBorderedImage.cpp
-index 7c48ddb9e1..0ed3044a11 100644
+index 7c48ddb9e..0ed3044a1 100644
 --- a/xbmc/guilib/GUIBorderedImage.cpp
 +++ b/xbmc/guilib/GUIBorderedImage.cpp
 @@ -56,9 +56,17 @@ void CGUIBorderedImage::Process(unsigned int currentTime, CDirtyRegionList &dirt
@@ -1221,7 +1172,7 @@ index 7c48ddb9e1..0ed3044a11 100644
  
  CRect CGUIBorderedImage::CalcRenderRegion() const
 diff --git a/xbmc/guilib/GUIButtonControl.cpp b/xbmc/guilib/GUIButtonControl.cpp
-index f509371689..22ded687b7 100644
+index f50937168..22ded687b 100644
 --- a/xbmc/guilib/GUIButtonControl.cpp
 +++ b/xbmc/guilib/GUIButtonControl.cpp
 @@ -110,15 +110,27 @@ void CGUIButtonControl::Process(unsigned int currentTime, CDirtyRegionList &dirt
@@ -1256,7 +1207,7 @@ index f509371689..22ded687b7 100644
    m_label2.Render();
  }
 diff --git a/xbmc/guilib/GUIControl.cpp b/xbmc/guilib/GUIControl.cpp
-index 689c55f257..890130e702 100644
+index 689c55f25..890130e70 100644
 --- a/xbmc/guilib/GUIControl.cpp
 +++ b/xbmc/guilib/GUIControl.cpp
 @@ -484,6 +484,11 @@ float CGUIControl::GetHeight() const
@@ -1272,7 +1223,7 @@ index 689c55f257..890130e702 100644
  {
    // if the control is culled, bail
 diff --git a/xbmc/guilib/GUIControl.h b/xbmc/guilib/GUIControl.h
-index 4cedee0761..3cecd09766 100644
+index 4cedee076..3cecd0976 100644
 --- a/xbmc/guilib/GUIControl.h
 +++ b/xbmc/guilib/GUIControl.h
 @@ -184,6 +184,7 @@ public:
@@ -1284,7 +1235,7 @@ index 4cedee0761..3cecd09766 100644
    void MarkDirtyRegion(const unsigned int dirtyState = DIRTY_STATE_CONTROL);
    bool IsControlDirty() const { return m_controlDirtyState != 0; }
 diff --git a/xbmc/guilib/GUIControlGroup.cpp b/xbmc/guilib/GUIControlGroup.cpp
-index 11af2ea89e..61142c7b5d 100644
+index 11af2ea89..61142c7b5 100644
 --- a/xbmc/guilib/GUIControlGroup.cpp
 +++ b/xbmc/guilib/GUIControlGroup.cpp
 @@ -108,12 +108,26 @@ void CGUIControlGroup::Render()
@@ -1344,7 +1295,7 @@ index 11af2ea89e..61142c7b5d 100644
  {
    CGUIControl::SetInitialVisibility();
 diff --git a/xbmc/guilib/GUIControlGroup.h b/xbmc/guilib/GUIControlGroup.h
-index 5c13466949..73529dda79 100644
+index 5c1346694..73529dda7 100644
 --- a/xbmc/guilib/GUIControlGroup.h
 +++ b/xbmc/guilib/GUIControlGroup.h
 @@ -41,6 +41,7 @@ public:
@@ -1356,7 +1307,7 @@ index 5c13466949..73529dda79 100644
    EVENT_RESULT SendMouseEvent(const CPoint& point, const KODI::MOUSE::CMouseEvent& event) override;
    void UnfocusFromPoint(const CPoint &point) override;
 diff --git a/xbmc/guilib/GUIEditControl.cpp b/xbmc/guilib/GUIEditControl.cpp
-index fe85f1ac77..adf8835747 100644
+index fe85f1ac7..adf883574 100644
 --- a/xbmc/guilib/GUIEditControl.cpp
 +++ b/xbmc/guilib/GUIEditControl.cpp
 @@ -548,6 +548,9 @@ void CGUIEditControl::ProcessText(unsigned int currentTime)
@@ -1370,7 +1321,7 @@ index fe85f1ac77..adf8835747 100644
  
    if (CServiceBroker::GetWinSystem()->GetGfxContext().SetClipRegion(m_clipRect.x1, m_clipRect.y1, m_clipRect.Width(), m_clipRect.Height()))
 diff --git a/xbmc/guilib/GUIFadeLabelControl.cpp b/xbmc/guilib/GUIFadeLabelControl.cpp
-index 1827c3d0c2..89f994b0f0 100644
+index 1827c3d0c..89f994b0f 100644
 --- a/xbmc/guilib/GUIFadeLabelControl.cpp
 +++ b/xbmc/guilib/GUIFadeLabelControl.cpp
 @@ -128,6 +128,7 @@ void CGUIFadeLabelControl::Process(unsigned int currentTime, CDirtyRegionList &d
@@ -1405,7 +1356,7 @@ index 1827c3d0c2..89f994b0f0 100644
  {
    return (m_currentLabel < m_infoLabels.size()) ?  m_infoLabels[m_currentLabel].GetLabel(m_parentID) : "";
 diff --git a/xbmc/guilib/GUIFadeLabelControl.h b/xbmc/guilib/GUIFadeLabelControl.h
-index 9f5f7abe4b..098a7527d4 100644
+index 9f5f7abe4..098a7527d 100644
 --- a/xbmc/guilib/GUIFadeLabelControl.h
 +++ b/xbmc/guilib/GUIFadeLabelControl.h
 @@ -17,6 +17,7 @@
@@ -1433,7 +1384,7 @@ index 9f5f7abe4b..098a7527d4 100644
  };
  
 diff --git a/xbmc/guilib/GUIFont.cpp b/xbmc/guilib/GUIFont.cpp
-index 784dd75971..bf0c014a0a 100644
+index 784dd7597..bf0c014a0 100644
 --- a/xbmc/guilib/GUIFont.cpp
 +++ b/xbmc/guilib/GUIFont.cpp
 @@ -234,18 +234,18 @@ void CGUIFont::DrawScrollingText(float x,
@@ -1464,7 +1415,7 @@ index 784dd75971..bf0c014a0a 100644
  
    context.RestoreClipRegion();
 diff --git a/xbmc/guilib/GUIFontTTF.cpp b/xbmc/guilib/GUIFontTTF.cpp
-index e7bd08c7a9..f9f0eec2a3 100644
+index e7bd08c7a..f9f0eec2a 100644
 --- a/xbmc/guilib/GUIFontTTF.cpp
 +++ b/xbmc/guilib/GUIFontTTF.cpp
 @@ -1,5 +1,5 @@
@@ -1653,7 +1604,7 @@ index e7bd08c7a9..f9f0eec2a3 100644
  }
  
 diff --git a/xbmc/guilib/GUIFontTTF.h b/xbmc/guilib/GUIFontTTF.h
-index 2ed270343d..02a0ac16df 100644
+index 2ed270343..02a0ac16d 100644
 --- a/xbmc/guilib/GUIFontTTF.h
 +++ b/xbmc/guilib/GUIFontTTF.h
 @@ -164,7 +164,9 @@ protected:
@@ -1692,7 +1643,7 @@ index 2ed270343d..02a0ac16df 100644
          m_clip(clip)
      {
 diff --git a/xbmc/guilib/GUIFontTTFGL.cpp b/xbmc/guilib/GUIFontTTFGL.cpp
-index 12889c9b1d..9255cd17da 100644
+index 12889c9b1..9255cd17d 100644
 --- a/xbmc/guilib/GUIFontTTFGL.cpp
 +++ b/xbmc/guilib/GUIFontTTFGL.cpp
 @@ -1,5 +1,5 @@
@@ -1873,7 +1824,7 @@ index 12889c9b1d..9255cd17da 100644
      glBindBuffer(GL_ARRAY_BUFFER, 0);
      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 diff --git a/xbmc/guilib/GUIFontTTFGL.h b/xbmc/guilib/GUIFontTTFGL.h
-index 22fbe6419b..e59a54a23c 100644
+index 22fbe6419..e59a54a23 100644
 --- a/xbmc/guilib/GUIFontTTFGL.h
 +++ b/xbmc/guilib/GUIFontTTFGL.h
 @@ -1,5 +1,5 @@
@@ -1891,7 +1842,7 @@ index 22fbe6419b..e59a54a23c 100644
 +  bool m_scissorClip{false};
  };
 diff --git a/xbmc/guilib/GUIFontTTFGLES.cpp b/xbmc/guilib/GUIFontTTFGLES.cpp
-index ad18836be3..0788b5585e 100644
+index ad18836be..0788b5585 100644
 --- a/xbmc/guilib/GUIFontTTFGLES.cpp
 +++ b/xbmc/guilib/GUIFontTTFGLES.cpp
 @@ -60,6 +60,17 @@ bool CGUIFontTTFGLES::FirstBegin()
@@ -2047,7 +1998,7 @@ index ad18836be3..0788b5585e 100644
      glBindBuffer(GL_ARRAY_BUFFER, 0);
      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 diff --git a/xbmc/guilib/GUIFontTTFGLES.h b/xbmc/guilib/GUIFontTTFGLES.h
-index ae03da74e6..264d1a7611 100644
+index ae03da74e..264d1a761 100644
 --- a/xbmc/guilib/GUIFontTTFGLES.h
 +++ b/xbmc/guilib/GUIFontTTFGLES.h
 @@ -55,4 +55,5 @@ private:
@@ -2057,7 +2008,7 @@ index ae03da74e6..264d1a7611 100644
 +  bool m_scissorClip{false};
  };
 diff --git a/xbmc/guilib/GUILabelControl.cpp b/xbmc/guilib/GUILabelControl.cpp
-index 9728639b13..5f57fbc3a6 100644
+index 9728639b1..5f57fbc3a 100644
 --- a/xbmc/guilib/GUILabelControl.cpp
 +++ b/xbmc/guilib/GUILabelControl.cpp
 @@ -139,6 +139,9 @@ CRect CGUILabelControl::CalcRenderRegion() const
@@ -2071,7 +2022,7 @@ index 9728639b13..5f57fbc3a6 100644
    CGUIControl::Render();
  }
 diff --git a/xbmc/guilib/GUIListItemLayout.cpp b/xbmc/guilib/GUIListItemLayout.cpp
-index 3b0f774d3d..35ff8ac462 100644
+index 3b0f774d3..35ff8ac46 100644
 --- a/xbmc/guilib/GUIListItemLayout.cpp
 +++ b/xbmc/guilib/GUIListItemLayout.cpp
 @@ -237,6 +237,11 @@ void CGUIListItemLayout::FreeResources(bool immediately)
@@ -2087,7 +2038,7 @@ index 3b0f774d3d..35ff8ac462 100644
  void CGUIListItemLayout::DumpTextureUse()
  {
 diff --git a/xbmc/guilib/GUIListItemLayout.h b/xbmc/guilib/GUIListItemLayout.h
-index 69d4c4fa63..7ba75794dd 100644
+index 69d4c4fa6..7ba75794d 100644
 --- a/xbmc/guilib/GUIListItemLayout.h
 +++ b/xbmc/guilib/GUIListItemLayout.h
 @@ -34,6 +34,7 @@ public:
@@ -2099,7 +2050,7 @@ index 69d4c4fa63..7ba75794dd 100644
    //#ifdef GUILIB_PYTHON_COMPATIBILITY
    void CreateListControlLayouts(float width, float height, bool focused, const CLabelInfo &labelInfo, const CLabelInfo &labelInfo2, const CTextureInfo &texture, const CTextureInfo &textureFocus, float texHeight, float iconWidth, float iconHeight, const std::string &nofocusCondition, const std::string &focusCondition);
 diff --git a/xbmc/guilib/GUIListLabel.cpp b/xbmc/guilib/GUIListLabel.cpp
-index b3138eb7aa..6797ba99dc 100644
+index b3138eb7a..6797ba99d 100644
 --- a/xbmc/guilib/GUIListLabel.cpp
 +++ b/xbmc/guilib/GUIListLabel.cpp
 @@ -67,6 +67,9 @@ void CGUIListLabel::Process(unsigned int currentTime, CDirtyRegionList &dirtyreg
@@ -2113,7 +2064,7 @@ index b3138eb7aa..6797ba99dc 100644
    CGUIControl::Render();
  }
 diff --git a/xbmc/guilib/GUIPanelContainer.cpp b/xbmc/guilib/GUIPanelContainer.cpp
-index 6d64110402..3c757dc157 100644
+index 6d6411040..3c757dc15 100644
 --- a/xbmc/guilib/GUIPanelContainer.cpp
 +++ b/xbmc/guilib/GUIPanelContainer.cpp
 @@ -114,6 +114,7 @@ void CGUIPanelContainer::Render()
@@ -2169,7 +2120,7 @@ index 6d64110402..3c757dc157 100644
  
      CServiceBroker::GetWinSystem()->GetGfxContext().RestoreClipRegion();
 diff --git a/xbmc/guilib/GUISettingsSliderControl.cpp b/xbmc/guilib/GUISettingsSliderControl.cpp
-index 1eb0e0e93e..31fb9832f2 100644
+index 1eb0e0e93..31fb9832f 100644
 --- a/xbmc/guilib/GUISettingsSliderControl.cpp
 +++ b/xbmc/guilib/GUISettingsSliderControl.cpp
 @@ -81,6 +81,9 @@ void CGUISettingsSliderControl::Render()
@@ -2183,7 +2134,7 @@ index 1eb0e0e93e..31fb9832f2 100644
  }
  
 diff --git a/xbmc/guilib/GUISpinControl.cpp b/xbmc/guilib/GUISpinControl.cpp
-index 2545985a34..62a8caaaad 100644
+index 2545985a3..62a8caaaa 100644
 --- a/xbmc/guilib/GUISpinControl.cpp
 +++ b/xbmc/guilib/GUISpinControl.cpp
 @@ -555,6 +555,9 @@ void CGUISpinControl::Render()
@@ -2197,7 +2148,7 @@ index 2545985a34..62a8caaaad 100644
    m_label.SetColor(GetTextColor());
    m_label.Render();
 diff --git a/xbmc/guilib/GUITextBox.cpp b/xbmc/guilib/GUITextBox.cpp
-index 898b7bb49e..045de2b3e0 100644
+index 898b7bb49..045de2b3e 100644
 --- a/xbmc/guilib/GUITextBox.cpp
 +++ b/xbmc/guilib/GUITextBox.cpp
 @@ -197,6 +197,10 @@ void CGUITextBox::Process(unsigned int currentTime, CDirtyRegionList &dirtyregio
@@ -2225,7 +2176,7 @@ index 898b7bb49e..045de2b3e0 100644
  {
    return m_lines.size();
 diff --git a/xbmc/guilib/GUITextBox.h b/xbmc/guilib/GUITextBox.h
-index 7027731c31..23c6fc11e3 100644
+index 7027731c3..23c6fc11e 100644
 --- a/xbmc/guilib/GUITextBox.h
 +++ b/xbmc/guilib/GUITextBox.h
 @@ -49,6 +49,7 @@ public:
@@ -2236,8 +2187,187 @@ index 7027731c31..23c6fc11e3 100644
  
    bool GetCondition(int condition, int data) const override;
    virtual std::string GetLabel(int info) const;
+diff --git a/xbmc/guilib/GUITextLayout.cpp b/xbmc/guilib/GUITextLayout.cpp
+index 11c671b11..2bf84915f 100644
+--- a/xbmc/guilib/GUITextLayout.cpp
++++ b/xbmc/guilib/GUITextLayout.cpp
+@@ -16,6 +16,8 @@
+ #include "utils/StringUtils.h"
+ #include "utils/log.h"
+ 
++#include <algorithm>
++#include <functional>
+ #include <limits>
+ 
+ CGUIString::CGUIString(iString start, iString end, bool carriageReturn)
+@@ -580,62 +582,114 @@ void CGUITextLayout::WrapText(const vecText &text, float maxWidth)
+       continue;
+     }
+ 
+-    vecText::const_iterator pos = line.m_text.begin();
+-    vecText::const_iterator lastBeginPos = line.m_text.begin();
+-    vecText::const_iterator lastSpacePos = line.m_text.end();
+-    vecText curLine;
+-
+-    while (pos < line.m_text.end())
++    std::vector<character_t> tmp;
++    tmp.reserve(line.m_text.size());
++    auto widthOf = [&](const std::vector<character_t>::const_iterator start,
++                       const std::vector<character_t>::const_iterator end) -> float
+     {
+-      // Get the current letter in the string
+-      const character_t& letter = *pos;
++      if (start == end)
++        return 0.0f;
++      tmp.assign(start, end);
++      return m_font->GetTextWidth(tmp);
++    };
+ 
+-      if (CanWrapAtLetter(letter)) // Check for a space char
+-        lastSpacePos = pos;
++    auto skipLeadingSpaces = [&](vecText::const_iterator& it)
++    {
++      it = std::find_if_not(it, line.m_text.end(),
++                            std::bind_front(&CGUITextLayout::CanWrapAtLetter, this));
++    };
+ 
+-      curLine.emplace_back(letter);
++    auto current = line.m_text.begin();
++    skipLeadingSpaces(current);
+ 
+-      const float currWidth = m_font->GetTextWidth(curLine);
++    float currentWidth = 0.0f;
++    std::vector<character_t>::const_iterator currentStart = current;
++    // track end without trailing spaces
++    std::vector<character_t>::const_iterator lastNonSpaceInLine = currentStart;
+ 
+-      if (currWidth > maxWidth)
++    while (current != line.m_text.end())
++    {
++      // Find next candidate wrap position
++      auto wordEnd = std::find_if(current, line.m_text.end(),
++                                  std::bind_front(&CGUITextLayout::CanWrapAtLetter, this));
++      const bool hasSpace = (wordEnd != line.m_text.end());
++      const float wordWidth = widthOf(current, wordEnd);
++      const float spaceWidth = hasSpace ? widthOf(wordEnd, wordEnd + 1) : 0.0f;
++
++      // Try to include word + trailing space
++      if (currentWidth + wordWidth + spaceWidth <= maxWidth)
+       {
+-        if (lastSpacePos > pos) // No space char where split the line, so split by char
+-        {
+-          // If the pos is equal to lastBeginPos, maxWidth is not large enough to contain 1 character
+-          // Push a line with the single character and move on to the next character.
+-          if (pos == lastBeginPos)
+-            ++pos;
+-
+-          CGUIString linePart{lastBeginPos, pos, false};
+-          m_lines.emplace_back(linePart);
+-        }
+-        else
+-        {
+-          CGUIString linePart{lastBeginPos, lastSpacePos, false};
+-          m_lines.emplace_back(linePart);
+-
+-          pos = lastSpacePos + 1;
+-          lastSpacePos = line.m_text.end();
+-        }
+-
+-        curLine.clear();
+-        lastBeginPos = pos;
+-
+-        if (m_lines.size() >= nMaxLines)
+-          return;
+-
++        currentWidth += wordWidth + spaceWidth;
++        lastNonSpaceInLine = wordEnd; // exclude trailing space
++        current = wordEnd;
++        if (hasSpace)
++          ++current;
+         continue;
+       }
+ 
+-      ++pos;
++      // Try to include word without trailing space
++      if (currentWidth + wordWidth <= maxWidth)
++      {
++        m_lines.emplace_back(currentStart, wordEnd, false);
++        if (m_lines.size() >= nMaxLines)
++          return;
++
++        current = wordEnd;
++        skipLeadingSpaces(current);
++        currentStart = current;
++        currentWidth = 0.0f;
++        lastNonSpaceInLine = currentStart;
++        continue;
++      }
++
++      // word itself doesn't fit after existing content: wrap before it (trim trailing spaces)
++      if (currentWidth > 0.0f)
++      {
++        const std::vector<character_t>::const_iterator emitEnd =
++            lastNonSpaceInLine > currentStart ? lastNonSpaceInLine : wordEnd;
++        m_lines.emplace_back(currentStart, emitEnd, false);
++        if (m_lines.size() >= nMaxLines)
++          return;
++
++        // Start a new line; keep pos at start of the overflowing word
++        skipLeadingSpaces(current);
++        currentStart = current;
++        currentWidth = 0.0f;
++        lastNonSpaceInLine = currentStart;
++        continue;
++      }
++
++      if (current == wordEnd)
++        break;
++
++      // current line is empty and word is too long: split by character using a safe linear scan.
++      // Do not assume monotonic width because shaping/kerning can make width shrink or grow non-linearly.
++      tmp.clear();
++      size_t bestCount = 0;
++      for (auto it = current; it != wordEnd; ++it)
++      {
++        tmp.push_back(*it);
++        if (m_font->GetTextWidth(tmp) <= maxWidth)
++          bestCount = tmp.size();
++      }
++      if (bestCount == 0)
++        bestCount = 1; // ensure progress even if a single glyph is wider than maxWidth
++
++      const auto cut = current + static_cast<ptrdiff_t>(bestCount);
++      m_lines.emplace_back(current, cut, false);
++      if (m_lines.size() >= nMaxLines)
++        return;
++
++      current = cut;
++      skipLeadingSpaces(current);
++      currentStart = current;
++      currentWidth = 0.0f;
++      lastNonSpaceInLine = currentStart;
+     }
+ 
+-    // Add the remaining text part
+-    if (!curLine.empty())
+-    {
+-      CGUIString linePart{curLine.begin(), curLine.end(), false};
+-      m_lines.emplace_back(linePart);
+-    }
++    // Add remaining text part of this paragraph line
++    if (currentStart < line.m_text.end())
++      m_lines.emplace_back(currentStart, line.m_text.end(), false);
+ 
+     // Restore carriage return marker for the end of paragraph
+     if (!m_lines.empty())
+@@ -768,5 +822,3 @@ void CGUITextLayout::Reset()
+   m_lastUtf8Text.clear();
+   m_textWidth = m_textHeight = 0;
+ }
+-
+-
 diff --git a/xbmc/guilib/GUITexture.cpp b/xbmc/guilib/GUITexture.cpp
-index 7f2f51dbbc..7a3e004ad9 100644
+index 7f2f51dbb..7a3e004ad 100644
 --- a/xbmc/guilib/GUITexture.cpp
 +++ b/xbmc/guilib/GUITexture.cpp
 @@ -9,6 +9,7 @@
@@ -2336,7 +2466,7 @@ index 7f2f51dbbc..7a3e004ad9 100644
    Begin(color);
  
 diff --git a/xbmc/guilib/GUITexture.h b/xbmc/guilib/GUITexture.h
-index c34dedc259..bbedc3aa21 100644
+index c34dedc25..bbedc3aa2 100644
 --- a/xbmc/guilib/GUITexture.h
 +++ b/xbmc/guilib/GUITexture.h
 @@ -67,8 +67,12 @@ class CGUITexture;
@@ -2378,7 +2508,7 @@ index c34dedc259..bbedc3aa21 100644
    CRect m_vertex;       // vertex coords to render
    bool m_invalid;       // if true, we need to recalculate
 diff --git a/xbmc/guilib/GUITextureD3D.cpp b/xbmc/guilib/GUITextureD3D.cpp
-index d031cac40a..68ce6f06f7 100644
+index d031cac40..68ce6f06f 100644
 --- a/xbmc/guilib/GUITextureD3D.cpp
 +++ b/xbmc/guilib/GUITextureD3D.cpp
 @@ -140,7 +140,9 @@ void CGUITextureD3D::Draw(float *x, float *y, float *z, const CRect &texture, co
@@ -2393,7 +2523,7 @@ index d031cac40a..68ce6f06f7 100644
    unsigned numViews = 0;
    ID3D11ShaderResourceView* views = nullptr;
 diff --git a/xbmc/guilib/GUITextureD3D.h b/xbmc/guilib/GUITextureD3D.h
-index a649f85ab1..87fd9a7848 100644
+index a649f85ab..87fd9a784 100644
 --- a/xbmc/guilib/GUITextureD3D.h
 +++ b/xbmc/guilib/GUITextureD3D.h
 @@ -21,7 +21,9 @@ public:
@@ -2408,7 +2538,7 @@ index a649f85ab1..87fd9a7848 100644
    CGUITextureD3D(float posX, float posY, float width, float height, const CTextureInfo& texture);
    ~CGUITextureD3D() override = default;
 diff --git a/xbmc/guilib/GUITextureGL.cpp b/xbmc/guilib/GUITextureGL.cpp
-index 6e46aa700a..c2f23ccdfb 100644
+index 6e46aa700..c2f23ccdf 100644
 --- a/xbmc/guilib/GUITextureGL.cpp
 +++ b/xbmc/guilib/GUITextureGL.cpp
 @@ -108,6 +108,7 @@ void CGUITextureGL::End()
@@ -2474,7 +2604,7 @@ index 6e46aa700a..c2f23ccdfb 100644
    // bottom left
    vertex[0].x = rect.x1;
 diff --git a/xbmc/guilib/GUITextureGL.h b/xbmc/guilib/GUITextureGL.h
-index 4acba1eb6d..5850586a22 100644
+index 4acba1eb6..5850586a2 100644
 --- a/xbmc/guilib/GUITextureGL.h
 +++ b/xbmc/guilib/GUITextureGL.h
 @@ -27,7 +27,9 @@ public:
@@ -2489,7 +2619,7 @@ index 4acba1eb6d..5850586a22 100644
    CGUITextureGL(float posX, float posY, float width, float height, const CTextureInfo& texture);
    ~CGUITextureGL() override = default;
 diff --git a/xbmc/guilib/GUITextureGLES.cpp b/xbmc/guilib/GUITextureGLES.cpp
-index d92201ae7f..97fdb28679 100644
+index d92201ae7..97fdb2867 100644
 --- a/xbmc/guilib/GUITextureGLES.cpp
 +++ b/xbmc/guilib/GUITextureGLES.cpp
 @@ -114,12 +114,15 @@ void CGUITextureGLES::End()
@@ -2554,7 +2684,7 @@ index d92201ae7f..97fdb28679 100644
    ver[0][0] = ver[3][0] = rect.x1;
    ver[0][1] = ver[1][1] = rect.y1;
 diff --git a/xbmc/guilib/GUITextureGLES.h b/xbmc/guilib/GUITextureGLES.h
-index a9b361031b..ad563704e0 100644
+index a9b361031..ad563704e 100644
 --- a/xbmc/guilib/GUITextureGLES.h
 +++ b/xbmc/guilib/GUITextureGLES.h
 @@ -36,7 +36,9 @@ public:
@@ -2569,7 +2699,7 @@ index a9b361031b..ad563704e0 100644
    CGUITextureGLES(float posX, float posY, float width, float height, const CTextureInfo& texture);
    ~CGUITextureGLES() override = default;
 diff --git a/xbmc/guilib/GUIVideoControl.cpp b/xbmc/guilib/GUIVideoControl.cpp
-index a24b20e3cf..ccb066a754 100644
+index a24b20e3c..ccb066a75 100644
 --- a/xbmc/guilib/GUIVideoControl.cpp
 +++ b/xbmc/guilib/GUIVideoControl.cpp
 @@ -9,6 +9,7 @@
@@ -2615,20 +2745,22 @@ index a24b20e3cf..ccb066a754 100644
      }
      else
 diff --git a/xbmc/guilib/GUIWindow.cpp b/xbmc/guilib/GUIWindow.cpp
-index ebb133d870..36306ff908 100644
+index ebb133d87..26fae889b 100644
 --- a/xbmc/guilib/GUIWindow.cpp
 +++ b/xbmc/guilib/GUIWindow.cpp
-@@ -1078,6 +1078,8 @@ void CGUIWindow::ClearBackground()
+@@ -1078,6 +1078,10 @@ void CGUIWindow::ClearBackground()
    UTILS::COLOR::Color color = m_clearBackground;
    if (color)
      CServiceBroker::GetWinSystem()->GetGfxContext().Clear(color);
++  else if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_guiGeometryClear)
++    CServiceBroker::GetWinSystem()->GetGfxContext().Clear(0xff000000);
 +  else
 +    CServiceBroker::GetWinSystem()->GetGfxContext().Clear();
  }
  
  void CGUIWindow::SetID(int id)
 diff --git a/xbmc/guilib/GUIWindowManager.cpp b/xbmc/guilib/GUIWindowManager.cpp
-index a43e23f49b..c40b910a76 100644
+index a43e23f49..c40b910a7 100644
 --- a/xbmc/guilib/GUIWindowManager.cpp
 +++ b/xbmc/guilib/GUIWindowManager.cpp
 @@ -1224,6 +1224,19 @@ void CGUIWindowManager::Process(unsigned int currentTime)
@@ -2716,7 +2848,7 @@ index a43e23f49b..c40b910a76 100644
  
    CGUIWindow* pWindow = GetWindow(GetActiveWindow());
 diff --git a/xbmc/guilib/GUIWindowManager.h b/xbmc/guilib/GUIWindowManager.h
-index 5930693d65..bfb27770f2 100644
+index 5930693d6..bfb27770f 100644
 --- a/xbmc/guilib/GUIWindowManager.h
 +++ b/xbmc/guilib/GUIWindowManager.h
 @@ -232,6 +232,12 @@ public:
@@ -2732,8 +2864,1167 @@ index 5930693d65..bfb27770f2 100644
  
    void LoadNotOnDemandWindows();
    void UnloadNotOnDemandWindows();
+diff --git a/xbmc/guilib/Texture.cpp b/xbmc/guilib/Texture.cpp
+index cfc506d48..91b9db90d 100644
+--- a/xbmc/guilib/Texture.cpp
++++ b/xbmc/guilib/Texture.cpp
+@@ -15,10 +15,12 @@
+ #include "filesystem/File.h"
+ #include "filesystem/ResourceFile.h"
+ #include "filesystem/XbtFile.h"
++#include "guilib/TextureBase.h"
+ #include "guilib/iimage.h"
+ #include "guilib/imagefactory.h"
+ #include "utils/URIUtils.h"
+ #include "utils/log.h"
++#include "windowing/WinSystem.h"
+ #if defined(TARGET_DARWIN_EMBEDDED)
+ #include <ImageIO/ImageIO.h>
+ #include "filesystem/File.h"
+@@ -50,70 +52,6 @@ CTexture::~CTexture()
+   m_pixels = NULL;
+ }
+ 
+-void CTexture::Allocate(unsigned int width, unsigned int height, XB_FMT format)
+-{
+-  m_imageWidth = m_originalWidth = width;
+-  m_imageHeight = m_originalHeight = height;
+-  m_format = format;
+-  m_orientation = 0;
+-
+-  m_textureWidth = m_imageWidth;
+-  m_textureHeight = m_imageHeight;
+-
+-  if (m_format & XB_FMT_DXT_MASK)
+-  {
+-    while (GetPitch() < CServiceBroker::GetRenderSystem()->GetMinDXTPitch())
+-      m_textureWidth += GetBlockSize();
+-  }
+-
+-  if (!CServiceBroker::GetRenderSystem()->SupportsNPOT((m_format & XB_FMT_DXT_MASK) != 0))
+-  {
+-    m_textureWidth = PadPow2(m_textureWidth);
+-    m_textureHeight = PadPow2(m_textureHeight);
+-  }
+-
+-  if (m_format & XB_FMT_DXT_MASK)
+-  {
+-    // DXT textures must be a multiple of 4 in width and height
+-    m_textureWidth = ((m_textureWidth + 3) / 4) * 4;
+-    m_textureHeight = ((m_textureHeight + 3) / 4) * 4;
+-  }
+-  else
+-  {
+-    // align all textures so that they have an even width
+-    // in some circumstances when we downsize a thumbnail
+-    // which has an uneven number of pixels in width
+-    // we crash in CPicture::ScaleImage in ffmpegs swscale
+-    // because it tries to access beyond the source memory
+-    // (happens on osx and ios)
+-    // UPDATE: don't just update to be on an even width;
+-    // ffmpegs swscale relies on a 16-byte stride on some systems
+-    // so the textureWidth needs to be a multiple of 16. see ffmpeg
+-    // swscale headers for more info.
+-    m_textureWidth = ((m_textureWidth + 15) / 16) * 16;
+-  }
+-
+-  // check for max texture size
+-  #define CLAMP(x, y) { if (x > y) x = y; }
+-  CLAMP(m_textureWidth, CServiceBroker::GetRenderSystem()->GetMaxTextureSize());
+-  CLAMP(m_textureHeight, CServiceBroker::GetRenderSystem()->GetMaxTextureSize());
+-  CLAMP(m_imageWidth, m_textureWidth);
+-  CLAMP(m_imageHeight, m_textureHeight);
+-
+-  KODI::MEMORY::AlignedFree(m_pixels);
+-  m_pixels = NULL;
+-  if (GetPitch() * GetRows() > 0)
+-  {
+-    size_t size = GetPitch() * GetRows();
+-    m_pixels = static_cast<unsigned char*>(KODI::MEMORY::AlignedMalloc(size, 32));
+-
+-    if (m_pixels == nullptr)
+-    {
+-      CLog::Log(LOGERROR, "{} - Could not allocate {} bytes. Out of memory.", __FUNCTION__, size);
+-    }
+-  }
+-}
+-
+ void CTexture::Update(unsigned int width,
+                       unsigned int height,
+                       unsigned int pitch,
+@@ -156,39 +94,6 @@ void CTexture::Update(unsigned int width,
+     LoadToGPU();
+ }
+ 
+-void CTexture::ClampToEdge()
+-{
+-  if (m_pixels == nullptr)
+-    return;
+-
+-  unsigned int imagePitch = GetPitch(m_imageWidth);
+-  unsigned int imageRows = GetRows(m_imageHeight);
+-  unsigned int texturePitch = GetPitch(m_textureWidth);
+-  unsigned int textureRows = GetRows(m_textureHeight);
+-  if (imagePitch < texturePitch)
+-  {
+-    unsigned int blockSize = GetBlockSize();
+-    unsigned char *src = m_pixels + imagePitch - blockSize;
+-    unsigned char *dst = m_pixels;
+-    for (unsigned int y = 0; y < imageRows; y++)
+-    {
+-      for (unsigned int x = imagePitch; x < texturePitch; x += blockSize)
+-        memcpy(dst + x, src, blockSize);
+-      dst += texturePitch;
+-    }
+-  }
+-
+-  if (imageRows < textureRows)
+-  {
+-    unsigned char *dst = m_pixels + imageRows * texturePitch;
+-    for (unsigned int y = imageRows; y < textureRows; y++)
+-    {
+-      memcpy(dst, dst - texturePitch, texturePitch);
+-      dst += texturePitch;
+-    }
+-  }
+-}
+-
+ std::unique_ptr<CTexture> CTexture::LoadFromFile(const std::string& texturePath,
+                                                  unsigned int idealWidth,
+                                                  unsigned int idealHeight,
+@@ -332,26 +237,51 @@ bool CTexture::LoadIImage(IImage* pImage,
+                           unsigned int width,
+                           unsigned int height)
+ {
+-  if(pImage != NULL && pImage->LoadImageFromMemory(buffer, bufSize, width, height))
+-  {
+-    if (pImage->Width() > 0 && pImage->Height() > 0)
+-    {
+-      Allocate(pImage->Width(), pImage->Height(), XB_FMT_A8R8G8B8);
+-      if (m_pixels != nullptr && pImage->Decode(m_pixels, GetTextureWidth(), GetRows(), GetPitch(), XB_FMT_A8R8G8B8))
+-      {
+-        if (pImage->Orientation())
+-          m_orientation = pImage->Orientation() - 1;
+-        m_hasAlpha = pImage->hasAlpha();
+-        m_originalWidth = pImage->originalWidth();
+-        m_originalHeight = pImage->originalHeight();
+-        m_imageWidth = pImage->Width();
+-        m_imageHeight = pImage->Height();
+-        ClampToEdge();
+-        return true;
+-      }
+-    }
+-  }
+-  return false;
++  if (pImage == nullptr)
++    return false;
++
++  if (!pImage->LoadImageFromMemory(buffer, bufSize, width, height))
++    return false;
++
++  if (pImage->Width() == 0 || pImage->Height() == 0)
++    return false;
++
++  Allocate(pImage->Width(), pImage->Height(), XB_FMT_A8R8G8B8);
++
++  if (m_pixels == nullptr)
++    return false;
++
++  if (!pImage->Decode(m_pixels, GetTextureWidth(), GetRows(), GetPitch(), XB_FMT_A8R8G8B8))
++    return false;
++
++  if (pImage->Orientation())
++    m_orientation = pImage->Orientation() - 1;
++
++  m_hasAlpha = pImage->hasAlpha();
++  m_originalWidth = pImage->originalWidth();
++  m_originalHeight = pImage->originalHeight();
++  m_imageWidth = pImage->Width();
++  m_imageHeight = pImage->Height();
++
++  ClampToEdge();
++
++  return true;
++}
++
++void CTexture::LoadToGPUAsync()
++{
++  // Already in main context?
++  if (CServiceBroker::GetWinSystem()->HasContext())
++    return;
++
++  if (!CServiceBroker::GetWinSystem()->BindTextureUploadContext())
++    return;
++
++  LoadToGPU();
++
++  SyncGPU();
++
++  CServiceBroker::GetWinSystem()->UnbindTextureUploadContext();
+ }
+ 
+ bool CTexture::LoadFromMemory(unsigned int width,
+@@ -397,99 +327,3 @@ bool CTexture::LoadPaletted(unsigned int width,
+   ClampToEdge();
+   return true;
+ }
+-
+-unsigned int CTexture::PadPow2(unsigned int x)
+-{
+-  --x;
+-  x |= x >> 1;
+-  x |= x >> 2;
+-  x |= x >> 4;
+-  x |= x >> 8;
+-  x |= x >> 16;
+-  return ++x;
+-}
+-
+-bool CTexture::SwapBlueRed(unsigned char* pixels,
+-                           unsigned int height,
+-                           unsigned int pitch,
+-                           unsigned int elements,
+-                           unsigned int offset)
+-{
+-  if (!pixels) return false;
+-  unsigned char *dst = pixels;
+-  for (unsigned int y = 0; y < height; y++)
+-  {
+-    dst = pixels + (y * pitch);
+-    for (unsigned int x = 0; x < pitch; x+=elements)
+-      std::swap(dst[x+offset], dst[x+2+offset]);
+-  }
+-  return true;
+-}
+-
+-unsigned int CTexture::GetPitch(unsigned int width) const
+-{
+-  switch (m_format)
+-  {
+-  case XB_FMT_DXT1:
+-    return ((width + 3) / 4) * 8;
+-  case XB_FMT_DXT3:
+-  case XB_FMT_DXT5:
+-  case XB_FMT_DXT5_YCoCg:
+-    return ((width + 3) / 4) * 16;
+-  case XB_FMT_A8:
+-    return width;
+-  case XB_FMT_RGB8:
+-    return (((width + 1)* 3 / 4) * 4);
+-  case XB_FMT_RGBA8:
+-  case XB_FMT_A8R8G8B8:
+-  default:
+-    return width*4;
+-  }
+-}
+-
+-unsigned int CTexture::GetRows(unsigned int height) const
+-{
+-  switch (m_format)
+-  {
+-  case XB_FMT_DXT1:
+-    return (height + 3) / 4;
+-  case XB_FMT_DXT3:
+-  case XB_FMT_DXT5:
+-  case XB_FMT_DXT5_YCoCg:
+-    return (height + 3) / 4;
+-  default:
+-    return height;
+-  }
+-}
+-
+-unsigned int CTexture::GetBlockSize() const
+-{
+-  switch (m_format)
+-  {
+-  case XB_FMT_DXT1:
+-    return 8;
+-  case XB_FMT_DXT3:
+-  case XB_FMT_DXT5:
+-  case XB_FMT_DXT5_YCoCg:
+-    return 16;
+-  case XB_FMT_A8:
+-    return 1;
+-  default:
+-    return 4;
+-  }
+-}
+-
+-bool CTexture::HasAlpha() const
+-{
+-  return m_hasAlpha;
+-}
+-
+-void CTexture::SetMipmapping()
+-{
+-  m_mipmapping = true;
+-}
+-
+-bool CTexture::IsMipmapped() const
+-{
+-  return m_mipmapping;
+-}
+diff --git a/xbmc/guilib/Texture.h b/xbmc/guilib/Texture.h
+index 5e32e60f8..6e5a4ff1a 100644
+--- a/xbmc/guilib/Texture.h
++++ b/xbmc/guilib/Texture.h
+@@ -8,6 +8,7 @@
+ 
+ #pragma once
+ 
++#include "guilib/TextureBase.h"
+ #include "guilib/TextureFormats.h"
+ 
+ #include <cstddef>
+@@ -21,17 +22,11 @@ class IImage;
+ struct COLOR {unsigned char b,g,r,x;};	// Windows GDI expects 4bytes per color
+ #pragma pack()
+ 
+-enum class TEXTURE_SCALING
+-{
+-  LINEAR,
+-  NEAREST,
+-};
+-
+ /*!
+ \ingroup textures
+-\brief Base texture class, subclasses of which depend on the render spec (DX, GL etc.)
++\brief Texture loader class, subclasses of which depend on the render spec (DX, GL etc.)
+ */
+-class CTexture
++class CTexture : public CTextureBase
+ {
+ 
+ public:
+@@ -86,47 +81,26 @@ public:
+                     const unsigned char* pixels,
+                     const COLOR* palette);
+ 
+-  bool HasAlpha() const;
+-  void SetAlpha(bool hasAlpha) { m_hasAlpha = hasAlpha; }
+-
+-  void SetMipmapping();
+-  bool IsMipmapped() const;
+-  void SetScalingMethod(TEXTURE_SCALING scalingMethod) { m_scalingMethod = scalingMethod; }
+-  TEXTURE_SCALING GetScalingMethod() const { return m_scalingMethod; }
+-  void SetCacheMemory(bool bCacheMemory) { m_bCacheMemory = bCacheMemory; }
+-  bool GetCacheMemory() const { return m_bCacheMemory; }
+-
+-  virtual void CreateTextureObject() = 0;
+-  virtual void DestroyTextureObject() = 0;
+-  virtual void LoadToGPU() = 0;
+-  virtual void BindToUnit(unsigned int unit) = 0;
+-
+-  unsigned char* GetPixels() const { return m_pixels; }
+-  unsigned int GetPitch() const { return GetPitch(m_textureWidth); }
+-  unsigned int GetRows() const { return GetRows(m_textureHeight); }
+-  unsigned int GetTextureWidth() const { return m_textureWidth; }
+-  unsigned int GetTextureHeight() const { return m_textureHeight; }
+-  unsigned int GetWidth() const { return m_imageWidth; }
+-  unsigned int GetHeight() const { return m_imageHeight; }
+-  /*! \brief return the original width of the image, before scaling/cropping */
+-  unsigned int GetOriginalWidth() const { return m_originalWidth; }
+-  /*! \brief return the original height of the image, before scaling/cropping */
+-  unsigned int GetOriginalHeight() const { return m_originalHeight; }
+-
+-  int GetOrientation() const { return m_orientation; }
+-  void SetOrientation(int orientation) { m_orientation = orientation; }
+-
+   void Update(unsigned int width,
+               unsigned int height,
+               unsigned int pitch,
+               XB_FMT format,
+               const unsigned char* pixels,
+               bool loadToGPU);
+-  void Allocate(unsigned int width, unsigned int height, XB_FMT format);
+-  void ClampToEdge();
+ 
+-  static unsigned int PadPow2(unsigned int x);
+-  static bool SwapBlueRed(unsigned char *pixels, unsigned int height, unsigned int pitch, unsigned int elements = 4, unsigned int offset=0);
++  /*! 
++   * \brief Uploads the texture to the GPU. 
++   */
++  void LoadToGPUAsync();
++
++  virtual void CreateTextureObject() = 0;
++  virtual void DestroyTextureObject() = 0;
++  virtual void LoadToGPU() = 0;
++  /*! 
++   * \brief Blocks execution until the previous GFX commands have been processed.
++   */
++  virtual void SyncGPU(){};
++  virtual void BindToUnit(unsigned int unit) = 0;
+ 
+ private:
+   // no copy constructor
+@@ -136,25 +110,9 @@ protected:
+   bool LoadFromFileInMem(unsigned char* buffer, size_t size, const std::string& mimeType,
+                          unsigned int maxWidth, unsigned int maxHeight);
+   bool LoadFromFileInternal(const std::string& texturePath, unsigned int maxWidth, unsigned int maxHeight, bool requirePixels, const std::string& strMimeType = "");
+-  bool LoadIImage(IImage* pImage, unsigned char* buffer, unsigned int bufSize, unsigned int width, unsigned int height);
+-  // helpers for computation of texture parameters for compressed textures
+-  unsigned int GetPitch(unsigned int width) const;
+-  unsigned int GetRows(unsigned int height) const;
+-  unsigned int GetBlockSize() const;
+-
+-  unsigned int m_imageWidth;
+-  unsigned int m_imageHeight;
+-  unsigned int m_textureWidth;
+-  unsigned int m_textureHeight;
+-  unsigned int m_originalWidth;   ///< original image width before scaling or cropping
+-  unsigned int m_originalHeight;  ///< original image height before scaling or cropping
+-
+-  unsigned char* m_pixels;
+-  bool m_loadedToGPU;
+-  XB_FMT m_format;
+-  int m_orientation;
+-  bool m_hasAlpha =  true ;
+-  bool m_mipmapping =  false ;
+-  TEXTURE_SCALING m_scalingMethod = TEXTURE_SCALING::LINEAR;
+-  bool m_bCacheMemory = false;
++  bool LoadIImage(IImage* pImage,
++                  unsigned char* buffer,
++                  unsigned int bufSize,
++                  unsigned int width,
++                  unsigned int height);
+ };
+diff --git a/xbmc/guilib/TextureBase.cpp b/xbmc/guilib/TextureBase.cpp
+new file mode 100644
+index 000000000..63c510ff9
+--- /dev/null
++++ b/xbmc/guilib/TextureBase.cpp
+@@ -0,0 +1,414 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#include "TextureBase.h"
++
++#include "ServiceBroker.h"
++#include "commons/ilog.h"
++#include "guilib/TextureFormats.h"
++#include "rendering/RenderSystem.h"
++#include "utils/MemUtils.h"
++#include "utils/log.h"
++
++#include <algorithm>
++#include <cstdint>
++#include <cstring>
++#include <exception>
++#include <utility>
++
++void CTextureBase::Allocate(uint32_t width, uint32_t height, XB_FMT format)
++{
++  SetKDFormat(format);
++  m_imageWidth = m_originalWidth = width;
++  m_imageHeight = m_originalHeight = height;
++  m_format = format;
++  m_orientation = 0;
++
++  m_textureWidth = m_imageWidth;
++  m_textureHeight = m_imageHeight;
++
++  if (!CServiceBroker::GetRenderSystem()->SupportsNPOT((m_textureFormat & KD_TEX_FMT_TYPE_MASK) !=
++                                                       KD_TEX_FMT_S3TC))
++  {
++    m_textureWidth = PadPow2(m_textureWidth);
++    m_textureHeight = PadPow2(m_textureHeight);
++  }
++
++  if ((m_textureFormat & KD_TEX_FMT_TYPE_MASK) == KD_TEX_FMT_S3TC)
++  {
++    // DXT textures must be a multiple of 4 in width and height
++    m_textureWidth = ((m_textureWidth + 3) / 4) * 4;
++    m_textureHeight = ((m_textureHeight + 3) / 4) * 4;
++  }
++  else
++  {
++    // align all textures so that they have an even width
++    // in some circumstances when we downsize a thumbnail
++    // which has an uneven number of pixels in width
++    // we crash in CPicture::ScaleImage in ffmpegs swscale
++    // because it tries to access beyond the source memory
++    // (happens on osx and ios)
++    // UPDATE: don't just update to be on an even width;
++    // ffmpegs swscale relies on a 16-byte stride on some systems
++    // so the textureWidth needs to be a multiple of 16. see ffmpeg
++    // swscale headers for more info.
++    m_textureWidth = ((m_textureWidth + 15) / 16) * 16;
++  }
++
++  // check for max texture size
++  m_textureWidth = std::min(m_textureWidth, CServiceBroker::GetRenderSystem()->GetMaxTextureSize());
++  m_textureHeight =
++      std::min(m_textureHeight, CServiceBroker::GetRenderSystem()->GetMaxTextureSize());
++  m_imageWidth = std::min(m_imageWidth, m_textureWidth);
++  m_imageHeight = std::min(m_imageHeight, m_textureHeight);
++
++  KODI::MEMORY::AlignedFree(m_pixels);
++  m_pixels = NULL;
++
++  size_t size = GetPitch() * GetRows();
++
++  if (size == 0)
++    return;
++
++  m_pixels = static_cast<unsigned char*>(KODI::MEMORY::AlignedMalloc(size, 32));
++
++  if (m_pixels == nullptr)
++    CLog::Log(LOGERROR, "{} - Could not allocate {} bytes. Out of memory.", __FUNCTION__, size);
++}
++
++uint32_t CTextureBase::PadPow2(uint32_t x)
++{
++  --x;
++  x |= x >> 1;
++  x |= x >> 2;
++  x |= x >> 4;
++  x |= x >> 8;
++  x |= x >> 16;
++  return ++x;
++}
++
++bool CTextureBase::SwapBlueRed(
++    uint8_t* pixels, uint32_t height, uint32_t pitch, uint32_t elements, uint32_t offset)
++{
++  if (!pixels)
++    return false;
++  uint8_t* dst = pixels;
++  for (uint32_t y = 0; y < height; y++)
++  {
++    dst = pixels + (y * pitch);
++    for (uint32_t x = 0; x < pitch; x += elements)
++      std::swap(dst[x + offset], dst[x + 2 + offset]);
++  }
++  return true;
++}
++
++void CTextureBase::ClampToEdge()
++{
++  if (m_pixels == nullptr)
++    return;
++
++  uint32_t imagePitch = GetPitch(m_imageWidth);
++  uint32_t imageRows = GetRows(m_imageHeight);
++  uint32_t texturePitch = GetPitch(m_textureWidth);
++  uint32_t textureRows = GetRows(m_textureHeight);
++
++  if (imagePitch < texturePitch)
++  {
++    uint32_t blockSize = GetBlockSize();
++    unsigned char* src = m_pixels + imagePitch - blockSize;
++    unsigned char* dst = m_pixels;
++    for (uint32_t y = 0; y < imageRows; y++)
++    {
++      for (uint32_t x = imagePitch; x < texturePitch; x += blockSize)
++        memcpy(dst + x, src, blockSize);
++      dst += texturePitch;
++      src += texturePitch;
++    }
++  }
++
++  if (imageRows < textureRows)
++  {
++    unsigned char* dst = m_pixels + imageRows * texturePitch;
++    for (uint32_t y = imageRows; y < textureRows; y++)
++    {
++      memcpy(dst, dst - texturePitch, texturePitch);
++      dst += texturePitch;
++    }
++  }
++}
++
++uint32_t CTextureBase::GetPitch(uint32_t width) const
++{
++  uint32_t blockWidth = GetBlockWidth();
++  uint32_t pitch = ((width + blockWidth - 1) / blockWidth) * GetBlockSize();
++
++  // For the GPU, RGB8 needs to be aligned to 32 bit
++  if (m_textureFormat == KD_TEX_FMT_SDR_RGB8)
++    pitch = ((pitch + 3) / 4) * 4;
++
++  return pitch;
++}
++
++uint32_t CTextureBase::GetRows(uint32_t height) const
++{
++  uint32_t blockHeight = GetBlockHeight();
++  return (height + blockHeight - 1) / blockHeight;
++}
++
++uint32_t CTextureBase::GetBlockWidth() const
++{
++  switch (m_textureFormat)
++  {
++    case KD_TEX_FMT_SDR_R8:
++    case KD_TEX_FMT_SDR_RG8:
++    case KD_TEX_FMT_SDR_R5G6B5:
++    case KD_TEX_FMT_SDR_RGB5_A1:
++    case KD_TEX_FMT_SDR_RGBA4:
++    case KD_TEX_FMT_SDR_RGB8:
++    case KD_TEX_FMT_SDR_RGBA8:
++    case KD_TEX_FMT_SDR_BGRA8:
++    case KD_TEX_FMT_HDR_R16f:
++    case KD_TEX_FMT_HDR_RG16f:
++    case KD_TEX_FMT_HDR_R11F_G11F_B10F:
++    case KD_TEX_FMT_HDR_RGB9_E5:
++    case KD_TEX_FMT_HDR_RGB10_A2:
++    case KD_TEX_FMT_HDR_RGBA16f:
++      return 1;
++    case KD_TEX_FMT_YUV_YUYV8:
++      return 2;
++    case KD_TEX_FMT_S3TC_RGB8:
++    case KD_TEX_FMT_S3TC_RGB8_A1:
++    case KD_TEX_FMT_S3TC_RGB8_A4:
++    case KD_TEX_FMT_S3TC_RGBA8:
++    case KD_TEX_FMT_RGTC_R11:
++    case KD_TEX_FMT_RGTC_RG11:
++    case KD_TEX_FMT_BPTC_RGB16F:
++    case KD_TEX_FMT_BPTC_RGBA8:
++    case KD_TEX_FMT_ETC1:
++    case KD_TEX_FMT_ETC2_RGB8:
++    case KD_TEX_FMT_ETC2_RGB8_A1:
++    case KD_TEX_FMT_ETC2_RGBA8:
++    case KD_TEX_FMT_ETC2_R11:
++    case KD_TEX_FMT_ETC2_RG11:
++    case KD_TEX_FMT_ASTC_LDR_4x4:
++    case KD_TEX_FMT_ASTC_HDR_4x4:
++      return 4;
++    case KD_TEX_FMT_ASTC_LDR_5x4:
++    case KD_TEX_FMT_ASTC_LDR_5x5:
++    case KD_TEX_FMT_ASTC_HDR_5x4:
++    case KD_TEX_FMT_ASTC_HDR_5x5:
++      return 5;
++    case KD_TEX_FMT_ASTC_LDR_6x5:
++    case KD_TEX_FMT_ASTC_LDR_6x6:
++    case KD_TEX_FMT_ASTC_HDR_6x5:
++    case KD_TEX_FMT_ASTC_HDR_6x6:
++      return 6;
++    case KD_TEX_FMT_ASTC_LDR_8x5:
++    case KD_TEX_FMT_ASTC_LDR_8x6:
++    case KD_TEX_FMT_ASTC_LDR_8x8:
++    case KD_TEX_FMT_ASTC_HDR_8x5:
++    case KD_TEX_FMT_ASTC_HDR_8x6:
++    case KD_TEX_FMT_ASTC_HDR_8x8:
++      return 8;
++    case KD_TEX_FMT_ASTC_LDR_10x5:
++    case KD_TEX_FMT_ASTC_LDR_10x6:
++    case KD_TEX_FMT_ASTC_LDR_10x8:
++    case KD_TEX_FMT_ASTC_LDR_10x10:
++    case KD_TEX_FMT_ASTC_HDR_10x5:
++    case KD_TEX_FMT_ASTC_HDR_10x6:
++    case KD_TEX_FMT_ASTC_HDR_10x8:
++    case KD_TEX_FMT_ASTC_HDR_10x10:
++      return 10;
++    case KD_TEX_FMT_ASTC_LDR_12x10:
++    case KD_TEX_FMT_ASTC_LDR_12x12:
++    case KD_TEX_FMT_ASTC_HDR_12x10:
++    case KD_TEX_FMT_ASTC_HDR_12x12:
++      return 12;
++    default:
++      return 1;
++  }
++}
++
++uint32_t CTextureBase::GetBlockHeight() const
++{
++  switch (m_textureFormat)
++  {
++    case KD_TEX_FMT_SDR_R8:
++    case KD_TEX_FMT_SDR_RG8:
++    case KD_TEX_FMT_SDR_R5G6B5:
++    case KD_TEX_FMT_SDR_RGB5_A1:
++    case KD_TEX_FMT_SDR_RGBA4:
++    case KD_TEX_FMT_SDR_RGB8:
++    case KD_TEX_FMT_SDR_RGBA8:
++    case KD_TEX_FMT_SDR_BGRA8:
++    case KD_TEX_FMT_HDR_R16f:
++    case KD_TEX_FMT_HDR_RG16f:
++    case KD_TEX_FMT_HDR_R11F_G11F_B10F:
++    case KD_TEX_FMT_HDR_RGB9_E5:
++    case KD_TEX_FMT_HDR_RGB10_A2:
++    case KD_TEX_FMT_HDR_RGBA16f:
++    case KD_TEX_FMT_YUV_YUYV8:
++      return 1;
++    case KD_TEX_FMT_S3TC_RGB8:
++    case KD_TEX_FMT_S3TC_RGB8_A1:
++    case KD_TEX_FMT_S3TC_RGB8_A4:
++    case KD_TEX_FMT_S3TC_RGBA8:
++    case KD_TEX_FMT_RGTC_R11:
++    case KD_TEX_FMT_RGTC_RG11:
++    case KD_TEX_FMT_BPTC_RGB16F:
++    case KD_TEX_FMT_BPTC_RGBA8:
++    case KD_TEX_FMT_ETC1:
++    case KD_TEX_FMT_ETC2_RGB8:
++    case KD_TEX_FMT_ETC2_RGB8_A1:
++    case KD_TEX_FMT_ETC2_RGBA8:
++    case KD_TEX_FMT_ETC2_R11:
++    case KD_TEX_FMT_ETC2_RG11:
++    case KD_TEX_FMT_ASTC_LDR_4x4:
++    case KD_TEX_FMT_ASTC_LDR_5x4:
++    case KD_TEX_FMT_ASTC_HDR_4x4:
++    case KD_TEX_FMT_ASTC_HDR_5x4:
++      return 4;
++    case KD_TEX_FMT_ASTC_LDR_5x5:
++    case KD_TEX_FMT_ASTC_LDR_6x5:
++    case KD_TEX_FMT_ASTC_LDR_8x5:
++    case KD_TEX_FMT_ASTC_LDR_10x5:
++    case KD_TEX_FMT_ASTC_HDR_5x5:
++    case KD_TEX_FMT_ASTC_HDR_6x5:
++    case KD_TEX_FMT_ASTC_HDR_8x5:
++    case KD_TEX_FMT_ASTC_HDR_10x5:
++      return 5;
++    case KD_TEX_FMT_ASTC_LDR_6x6:
++    case KD_TEX_FMT_ASTC_LDR_8x6:
++    case KD_TEX_FMT_ASTC_LDR_10x6:
++    case KD_TEX_FMT_ASTC_HDR_6x6:
++    case KD_TEX_FMT_ASTC_HDR_8x6:
++    case KD_TEX_FMT_ASTC_HDR_10x6:
++      return 6;
++    case KD_TEX_FMT_ASTC_LDR_8x8:
++    case KD_TEX_FMT_ASTC_LDR_10x8:
++    case KD_TEX_FMT_ASTC_HDR_8x8:
++    case KD_TEX_FMT_ASTC_HDR_10x8:
++      return 8;
++    case KD_TEX_FMT_ASTC_LDR_10x10:
++    case KD_TEX_FMT_ASTC_LDR_12x10:
++    case KD_TEX_FMT_ASTC_HDR_10x10:
++    case KD_TEX_FMT_ASTC_HDR_12x10:
++      return 10;
++    case KD_TEX_FMT_ASTC_LDR_12x12:
++    case KD_TEX_FMT_ASTC_HDR_12x12:
++      return 12;
++    default:
++      return 4;
++  }
++}
++
++uint32_t CTextureBase::GetBlockSize() const
++{
++  switch (m_textureFormat)
++  {
++    case KD_TEX_FMT_SDR_R8:
++      return 1;
++    case KD_TEX_FMT_SDR_RG8:
++    case KD_TEX_FMT_SDR_R5G6B5:
++    case KD_TEX_FMT_SDR_RGB5_A1:
++    case KD_TEX_FMT_SDR_RGBA4:
++    case KD_TEX_FMT_HDR_R16f:
++      return 2;
++    case KD_TEX_FMT_SDR_RGB8:
++      return 3;
++    case KD_TEX_FMT_SDR_RGBA8:
++    case KD_TEX_FMT_SDR_BGRA8:
++    case KD_TEX_FMT_HDR_RG16f:
++    case KD_TEX_FMT_HDR_R11F_G11F_B10F:
++    case KD_TEX_FMT_HDR_RGB9_E5:
++    case KD_TEX_FMT_HDR_RGB10_A2:
++    case KD_TEX_FMT_YUV_YUYV8:
++      return 4;
++    case KD_TEX_FMT_HDR_RGBA16f:
++    case KD_TEX_FMT_S3TC_RGB8:
++    case KD_TEX_FMT_S3TC_RGB8_A1:
++    case KD_TEX_FMT_RGTC_R11:
++    case KD_TEX_FMT_ETC1:
++    case KD_TEX_FMT_ETC2_RGB8:
++    case KD_TEX_FMT_ETC2_RGB8_A1:
++    case KD_TEX_FMT_ETC2_R11:
++      return 8;
++    case KD_TEX_FMT_S3TC_RGB8_A4:
++    case KD_TEX_FMT_S3TC_RGBA8:
++    case KD_TEX_FMT_RGTC_RG11:
++    case KD_TEX_FMT_BPTC_RGB16F:
++    case KD_TEX_FMT_BPTC_RGBA8:
++    case KD_TEX_FMT_ETC2_RG11:
++    case KD_TEX_FMT_ETC2_RGBA8:
++    case KD_TEX_FMT_ASTC_LDR_4x4:
++    case KD_TEX_FMT_ASTC_LDR_5x4:
++    case KD_TEX_FMT_ASTC_LDR_5x5:
++    case KD_TEX_FMT_ASTC_LDR_6x5:
++    case KD_TEX_FMT_ASTC_LDR_6x6:
++    case KD_TEX_FMT_ASTC_LDR_8x5:
++    case KD_TEX_FMT_ASTC_LDR_8x6:
++    case KD_TEX_FMT_ASTC_LDR_8x8:
++    case KD_TEX_FMT_ASTC_LDR_10x5:
++    case KD_TEX_FMT_ASTC_LDR_10x6:
++    case KD_TEX_FMT_ASTC_LDR_10x8:
++    case KD_TEX_FMT_ASTC_LDR_10x10:
++    case KD_TEX_FMT_ASTC_LDR_12x10:
++    case KD_TEX_FMT_ASTC_LDR_12x12:
++    case KD_TEX_FMT_ASTC_HDR_4x4:
++    case KD_TEX_FMT_ASTC_HDR_5x4:
++    case KD_TEX_FMT_ASTC_HDR_5x5:
++    case KD_TEX_FMT_ASTC_HDR_6x5:
++    case KD_TEX_FMT_ASTC_HDR_6x6:
++    case KD_TEX_FMT_ASTC_HDR_8x5:
++    case KD_TEX_FMT_ASTC_HDR_8x6:
++    case KD_TEX_FMT_ASTC_HDR_8x8:
++    case KD_TEX_FMT_ASTC_HDR_10x5:
++    case KD_TEX_FMT_ASTC_HDR_10x6:
++    case KD_TEX_FMT_ASTC_HDR_10x8:
++    case KD_TEX_FMT_ASTC_HDR_10x10:
++    case KD_TEX_FMT_ASTC_HDR_12x10:
++    case KD_TEX_FMT_ASTC_HDR_12x12:
++      return 16;
++    default:
++      return 4;
++  }
++}
++
++void CTextureBase::SetKDFormat(XB_FMT xbFMT)
++{
++  switch (xbFMT)
++  {
++    case XB_FMT_DXT1:
++      m_textureFormat = KD_TEX_FMT_S3TC_RGB8;
++      return;
++    case XB_FMT_DXT3:
++      m_textureFormat = KD_TEX_FMT_S3TC_RGB8_A4;
++      return;
++    case XB_FMT_DXT5:
++      m_textureFormat = KD_TEX_FMT_S3TC_RGBA8;
++      return;
++    case XB_FMT_A8R8G8B8:
++      m_textureFormat = KD_TEX_FMT_SDR_BGRA8;
++      return;
++    case XB_FMT_A8:
++      m_textureFormat = KD_TEX_FMT_SDR_R8;
++      m_textureSwizzle = KD_TEX_SWIZ_111R;
++      return;
++    case XB_FMT_RGBA8:
++      m_textureFormat = KD_TEX_FMT_SDR_RGBA8;
++      return;
++    case XB_FMT_RGB8:
++      m_textureFormat = KD_TEX_FMT_SDR_RGB8;
++      return;
++    case XB_FMT_UNKNOWN:
++    case XB_FMT_DXT5_YCoCg:
++    default:
++      m_textureFormat = KD_TEX_FMT_UNKNOWN;
++      return;
++  }
++}
+diff --git a/xbmc/guilib/TextureBase.h b/xbmc/guilib/TextureBase.h
+new file mode 100644
+index 000000000..bbabe2ae4
+--- /dev/null
++++ b/xbmc/guilib/TextureBase.h
+@@ -0,0 +1,117 @@
++/*
++ *  Copyright (C) 2005-2018 Team Kodi
++ *  This file is part of Kodi - https://kodi.tv
++ *
++ *  SPDX-License-Identifier: GPL-2.0-or-later
++ *  See LICENSES/README.md for more information.
++ */
++
++#pragma once
++
++#include "guilib/TextureFormats.h"
++
++#include <memory>
++#include <string>
++
++enum class TEXTURE_SCALING
++{
++  LINEAR,
++  NEAREST,
++};
++
++/*!
++\ingroup textures
++\brief Base texture class, which holds the state of the texture, as well as all conversion functions.
++*/
++class CTextureBase
++{
++
++public:
++  CTextureBase() = default;
++  ~CTextureBase() = default;
++
++  bool HasAlpha() const { return m_hasAlpha; }
++  void SetAlpha(bool hasAlpha) { m_hasAlpha = hasAlpha; }
++
++  /*! \brief sets mipmapping. do not use in new code. will be replaced with proper scaling. */
++  void SetMipmapping() { m_mipmapping = true; }
++  /*! \brief return true if we want to mipmap */
++  bool IsMipmapped() const { return m_mipmapping; }
++
++  /*! \brief sets the scaling method. scanout systems might support more than NN/linear. */
++  void SetScalingMethod(TEXTURE_SCALING scalingMethod) { m_scalingMethod = scalingMethod; }
++  /*! \brief returns the scaling method. */
++  TEXTURE_SCALING GetScalingMethod() const { return m_scalingMethod; }
++
++  int32_t GetOrientation() const { return m_orientation; }
++  void SetOrientation(int orientation) { m_orientation = orientation; }
++
++  /*! \brief retains a shadow copy of the texture on the CPU side. */
++  void SetCacheMemory(bool bCacheMemory) { m_bCacheMemory = bCacheMemory; }
++  /*! \brief returns true if a shadow copy is kept on the CPU side. */
++  bool GetCacheMemory() const { return m_bCacheMemory; }
++
++  /*! \brief returns a pointer to the staging texture. */
++  uint8_t* GetPixels() const { return m_pixels; }
++
++  /*! \brief return the size of one row in bytes. */
++  uint32_t GetPitch() const { return GetPitch(m_textureWidth); }
++  /*! \brief return the number of rows (number of blocks in the Y direction). */
++  uint32_t GetRows() const { return GetRows(m_textureHeight); }
++  /*! \brief return the total width of the texture, which might be scaled to fit its displayed size. */
++  uint32_t GetTextureWidth() const { return m_textureWidth; }
++  /*! \brief return the total height of the texture, which might be scaled to fit its displayed size. */
++  uint32_t GetTextureHeight() const { return m_textureHeight; }
++  /*! \brief return the total width of "active" area, which might be equal or lower than the texture width due to alignment. */
++  uint32_t GetWidth() const { return m_imageWidth; }
++  /*! \brief return the total height of "active" area, which might be equal or lower than the texture height due to alignment. */
++  uint32_t GetHeight() const { return m_imageHeight; }
++  /*! \brief return the original width of the image, before scaling/cropping */
++  uint32_t GetOriginalWidth() const { return m_originalWidth; }
++  /*! \brief return the original height of the image, before scaling/cropping */
++  uint32_t GetOriginalHeight() const { return m_originalHeight; }
++
++  // allocates staging texture space.
++  void Allocate(uint32_t width, uint32_t height, XB_FMT format);
++  void ClampToEdge();
++
++  /*! \brief rounds to power of two. deprecated. */
++  static uint32_t PadPow2(uint32_t x);
++  /*! \brief swaps the blue/red channel. deprecated in this form. */
++  static bool SwapBlueRed(
++      uint8_t* pixels, uint32_t height, uint32_t pitch, uint32_t elements = 4, uint32_t offset = 0);
++
++protected:
++  // helpers for computation of texture parameters for compressed textures
++  uint32_t GetPitch(uint32_t width) const;
++  uint32_t GetRows(uint32_t height) const;
++  uint32_t GetBlockWidth() const;
++  uint32_t GetBlockHeight() const;
++  /*! \brief return the size of a compression block (tile) in bytes. */
++  uint32_t GetBlockSize() const;
++
++  void SetKDFormat(XB_FMT xbFMT);
++
++  uint32_t m_imageWidth{0};
++  uint32_t m_imageHeight{0};
++  uint32_t m_textureWidth{0};
++  uint32_t m_textureHeight{0};
++  uint32_t m_originalWidth{0}; ///< original image width before scaling or cropping
++  uint32_t m_originalHeight{0}; ///< original image height before scaling or cropping
++
++  uint8_t* m_pixels{nullptr};
++  bool m_loadedToGPU{false};
++
++  KD_TEX_FMT m_textureFormat{KD_TEX_FMT_UNKNOWN}; // new Kodi texture format
++  KD_TEX_SWIZ m_textureSwizzle{KD_TEX_SWIZ_RGBA};
++  KD_TEX_COL m_textureColorspace{KD_TEX_COL_REC709};
++  KD_TEX_TRANSFER m_textureTransfer{KD_TEX_TRANSFER_SRGB};
++  KD_TEX_ALPHA m_textureAlpha{KD_TEX_ALPHA_STRAIGHT};
++
++  XB_FMT m_format{XB_FMT_UNKNOWN}; // legacy XB format, deprecated
++  int32_t m_orientation{0};
++  bool m_hasAlpha{true};
++  bool m_mipmapping{false};
++  TEXTURE_SCALING m_scalingMethod{TEXTURE_SCALING::LINEAR};
++  bool m_bCacheMemory{false};
++};
+diff --git a/xbmc/guilib/TextureFormats.h b/xbmc/guilib/TextureFormats.h
+index 2aab71a94..5b7d87c5f 100644
+--- a/xbmc/guilib/TextureFormats.h
++++ b/xbmc/guilib/TextureFormats.h
+@@ -25,4 +25,159 @@ enum XB_FMT
+   XB_FMT_MASK        = 0xFFFF,
+   XB_FMT_OPAQUE      = 0x10000,
+ };
++
++enum KD_TEX_FMT
++{
++  KD_TEX_FMT_UNKNOWN            = 0x0000,
++
++  // Legacy XB_FMT formats family
++  KD_TEX_FMT_LEGACY             = 0x0000,
++
++  // SDR texture family
++  KD_TEX_FMT_SDR                = 0x1000,
++  KD_TEX_FMT_SDR_R8             = 0x1000, // 8bpp, single channel
++  KD_TEX_FMT_SDR_RG8            = 0x1100, // 16bpp, dual channel
++  KD_TEX_FMT_SDR_R5G6B5         = 0x1200, // 16bpp, 5/6 bit per color channel
++  KD_TEX_FMT_SDR_RGB5_A1        = 0x1300, // 16bpp, 5 bit per color channel, pt-alpha
++  KD_TEX_FMT_SDR_RGBA4          = 0x1400, // 16bpp, 4 bit per channel
++  KD_TEX_FMT_SDR_RGB8           = 0x1500, // 24bpp, 8 bit per channel, no alpha (unsuitable for GPUs!)
++  KD_TEX_FMT_SDR_RGBA8          = 0x1600, // 32bpp, 8 bit per channel, RGBA order
++  KD_TEX_FMT_SDR_BGRA8          = 0x1700, // 32bpp, 8 bit per channel, BGRA order
++
++  // HDR texture family
++  KD_TEX_FMT_HDR                = 0x2000, 
++  KD_TEX_FMT_HDR_R16f           = 0x2100, // 16bpp, single channel float
++  KD_TEX_FMT_HDR_RG16f          = 0x2200, // 32bpp, dual channel float
++  KD_TEX_FMT_HDR_R11F_G11F_B10F = 0x2300, // 32bpp, 6e5/5e5 per color channel
++  KD_TEX_FMT_HDR_RGB9_E5        = 0x2400, // 32bpp, 9 bit color, shared 5 bit exponent
++  KD_TEX_FMT_HDR_RGB10_A2       = 0x2500, // 32bpp, 10 bit color, 2 bit alpha
++  KD_TEX_FMT_HDR_RGBA16f        = 0x2600, // 64bpp, four channel float
++
++  // YUV texture family
++  KD_TEX_FMT_YUV                = 0x3000,
++  KD_TEX_FMT_YUV_YUYV8          = 0x3000, // 16bpp, 4:2:2 packed 
++
++  // S3TC texture family
++  KD_TEX_FMT_S3TC               = 0x4000,
++  KD_TEX_FMT_S3TC_RGB8          = 0x4000, // 4bpp, RGB (BC1)
++  KD_TEX_FMT_S3TC_RGB8_A1       = 0x4100, // 4bpp, RGB, pt-alpha (BC1)
++  KD_TEX_FMT_S3TC_RGB8_A4       = 0x4200, // 8bpp, RGB, 4 bit alpha (BC2)
++  KD_TEX_FMT_S3TC_RGBA8         = 0x4300, // 8bpp, RGBA (BC3)
++
++  // RGTC (LATC) texture family
++  KD_TEX_FMT_RGTC               = 0x5000,
++  KD_TEX_FMT_RGTC_R11           = 0x5000, // 4bpp, single channel (BC4)
++  KD_TEX_FMT_RGTC_RG11          = 0x5100, // 8bpp, dual channel (BC5)
++
++  // BPTC texture family
++  KD_TEX_FMT_BPTC               = 0x6000,
++  KD_TEX_FMT_BPTC_RGB16F        = 0x6000, // 8bpp, HDR (BC6H float)
++  KD_TEX_FMT_BPTC_RGBA8         = 0x6100, // 8bpp, LDR (BC7 unorm)
++
++  // ETC1 texture family
++  KD_TEX_FMT_ETC1               = 0x7000,
++  KD_TEX_FMT_ETC1_RGB8          = 0x7000, // 4bpp, RGB
++
++  // ETC2 texture family
++  KD_TEX_FMT_ETC2               = 0x8000,
++  KD_TEX_FMT_ETC2_R11           = 0x8100, // 4bpp, single channel (EAC)
++  KD_TEX_FMT_ETC2_RG11          = 0x8200, // 8bpp, dual channel (EAC)
++  KD_TEX_FMT_ETC2_RGB8          = 0x8300, // 4bpp, RGB
++  KD_TEX_FMT_ETC2_RGB8_A1       = 0x8400, // 4bpp, RGB, pt-alpha
++  KD_TEX_FMT_ETC2_RGBA8         = 0x8500, // 8bpp, RGB, alpha EAC
++
++  // ASTC LDR texture family
++  // Bitrate varies from 8bpp (4x4 tile) to 0.89bpp (12x12 tile).
++  KD_TEX_FMT_ASTC_LDR           = 0x9000,
++  KD_TEX_FMT_ASTC_LDR_4x4       = 0x9000,
++  KD_TEX_FMT_ASTC_LDR_5x4       = 0x9100,
++  KD_TEX_FMT_ASTC_LDR_5x5       = 0x9200,
++  KD_TEX_FMT_ASTC_LDR_6x5       = 0x9300,
++  KD_TEX_FMT_ASTC_LDR_6x6       = 0x9400,
++  KD_TEX_FMT_ASTC_LDR_8x5       = 0x9500,
++  KD_TEX_FMT_ASTC_LDR_8x6       = 0x9600,
++  KD_TEX_FMT_ASTC_LDR_8x8       = 0x9700,
++  KD_TEX_FMT_ASTC_LDR_10x5      = 0x9800,
++  KD_TEX_FMT_ASTC_LDR_10x6      = 0x9900,
++  KD_TEX_FMT_ASTC_LDR_10x8      = 0x9A00,
++  KD_TEX_FMT_ASTC_LDR_10x10     = 0x9B00,
++  KD_TEX_FMT_ASTC_LDR_12x10     = 0x9C00,
++  KD_TEX_FMT_ASTC_LDR_12x12     = 0x9D00,
++
++  // ASTC HDR texture family
++  // Bitrate varies from 8bpp (4x4 tile) to 0.89bpp (12x12 tile).
++  KD_TEX_FMT_ASTC_HDR           = 0xA000,
++  KD_TEX_FMT_ASTC_HDR_4x4       = 0xA000,
++  KD_TEX_FMT_ASTC_HDR_5x4       = 0xA100,
++  KD_TEX_FMT_ASTC_HDR_5x5       = 0xA200,
++  KD_TEX_FMT_ASTC_HDR_6x5       = 0xA300,
++  KD_TEX_FMT_ASTC_HDR_6x6       = 0xA400,
++  KD_TEX_FMT_ASTC_HDR_8x5       = 0xA500,
++  KD_TEX_FMT_ASTC_HDR_8x6       = 0xA600,
++  KD_TEX_FMT_ASTC_HDR_8x8       = 0xA700,
++  KD_TEX_FMT_ASTC_HDR_10x5      = 0xA800,
++  KD_TEX_FMT_ASTC_HDR_10x6      = 0xA900,
++  KD_TEX_FMT_ASTC_HDR_10x8      = 0xAA00,
++  KD_TEX_FMT_ASTC_HDR_10x10     = 0xAB00,
++  KD_TEX_FMT_ASTC_HDR_12x10     = 0xAC00,
++  KD_TEX_FMT_ASTC_HDR_12x12     = 0xAD00,
++
++  KD_TEX_FMT_TYPE_MASK          = 0xF000,
++
++  KD_TEX_FMT_MASK               = 0xFFFF,
++};
++
++// Alpha handling
++enum KD_TEX_ALPHA
++{
++  KD_TEX_ALPHA_STRAIGHT         = 0x00000, // Straight (unmultiplied) alpha
++  KD_TEX_ALPHA_OPAQUE           = 0x10000, // No alpha
++  KD_TEX_ALPHA_PREMULTIPLIED    = 0x20000, // Premultiplied alpha
++
++  KD_TEX_ALPHA_MASK             = 0xF0000,
++};
++ 
++// Texture component swizzle or effect
++enum KD_TEX_SWIZ
++{
++  KD_TEX_SWIZ_RGBA              = 0x000000, // No swizzling
++  KD_TEX_SWIZ_RGB1              = 0x100000, // Normal swizzle, ignoring alpha
++  KD_TEX_SWIZ_RRR1              = 0x200000, // Luminance
++  KD_TEX_SWIZ_111R              = 0x300000, // Alpha
++  KD_TEX_SWIZ_RRRG              = 0x400000, // Luminance-Alpha
++  KD_TEX_SWIZ_RRRR              = 0x500000, // Intensity
++  KD_TEX_SWIZ_GGG1              = 0x600000, // Luminance (ETC1/BC1)
++  KD_TEX_SWIZ_111G              = 0x700000, // Alpha (ETC1/BC1)
++  KD_TEX_SWIZ_GGGA              = 0x800000, // Luminance-Alpha (BC2/BC3)
++  KD_TEX_SWIZ_GGGG              = 0x900000, // Intensity (ETC1/BC1)
++
++  KD_TEX_SWIZ_SDF               = 0xa00000, // Red channel contains a SDF
++  KD_TEX_SWIZ_RGB_SDF           = 0xb00000, // RGB8 texture with a SDF packed in the alpha channel
++  KD_TEX_SWIZ_MSDF              = 0xc00000, // Encoded MSDF in the color channels, Alpha is ignored
++
++  KD_TEX_SWIZ_MASK              = 0xF00000,
++};
++
++// Color space
++enum KD_TEX_COL
++{
++  KD_TEX_COL_REC709             = 0x0000000, // REC709/sRGB color space
++  KD_TEX_COL_REC2020            = 0x1000000, // REC2020 color space
++
++  KD_TEX_COL_MASK               = 0xF000000,
++};
++
++// Transfer function
++enum KD_TEX_TRANSFER
++{
++  KD_TEX_TRANSFER_SRGB          = 0x00000000,
++  KD_TEX_TRANSFER_REC709        = 0x10000000,
++  KD_TEX_TRANSFER_HLG           = 0x20000000,
++  KD_TEX_TRANSFER_LINEAR        = 0x30000000,
++  KD_TEX_TRANSFER_SQUARED       = 0x40000000,
++  KD_TEX_TRANSFER_PQ            = 0x50000000,
++
++  KD_TEX_TRANSFER_MASK          = 0xF0000000,
++};
++
+ // clang-format on
+diff --git a/xbmc/guilib/TextureGL.cpp b/xbmc/guilib/TextureGL.cpp
+index a2cf428b2..e6bbdef2c 100644
+--- a/xbmc/guilib/TextureGL.cpp
++++ b/xbmc/guilib/TextureGL.cpp
+@@ -218,6 +218,11 @@ void CGLTexture::LoadToGPU()
+   m_loadedToGPU = true;
+ }
+ 
++void CGLTexture::SyncGPU()
++{
++  glFinish();
++}
++
+ void CGLTexture::BindToUnit(unsigned int unit)
+ {
+   glActiveTexture(GL_TEXTURE0 + unit);
+diff --git a/xbmc/guilib/TextureGL.h b/xbmc/guilib/TextureGL.h
+index 58d219b62..0a979065e 100644
+--- a/xbmc/guilib/TextureGL.h
++++ b/xbmc/guilib/TextureGL.h
+@@ -24,6 +24,7 @@ public:
+   void CreateTextureObject() override;
+   void DestroyTextureObject() override;
+   void LoadToGPU() override;
++  void SyncGPU() override;
+   void BindToUnit(unsigned int unit) override;
+ 
+ protected:
 diff --git a/xbmc/pictures/SlideShowPicture.cpp b/xbmc/pictures/SlideShowPicture.cpp
-index 005d740654..fd0fd2cdd6 100644
+index 005d74065..fd0fd2cdd 100644
 --- a/xbmc/pictures/SlideShowPicture.cpp
 +++ b/xbmc/pictures/SlideShowPicture.cpp
 @@ -727,6 +727,9 @@ void CSlideShowPic::Move(float fDeltaX, float fDeltaY)
@@ -2747,7 +4038,7 @@ index 005d740654..fd0fd2cdd6 100644
  
    Render(m_ax, m_ay, m_pImage.get(), (m_alpha << 24) | 0xFFFFFF);
 diff --git a/xbmc/pictures/SlideShowPictureGL.cpp b/xbmc/pictures/SlideShowPictureGL.cpp
-index 5749bff2c1..ee7ddb2a9f 100644
+index 5749bff2c..ee7ddb2a9 100644
 --- a/xbmc/pictures/SlideShowPictureGL.cpp
 +++ b/xbmc/pictures/SlideShowPictureGL.cpp
 @@ -81,6 +81,7 @@ void CSlideShowPicGL::Render(float* x, float* y, CTexture* pTexture, UTILS::COLO
@@ -2767,7 +4058,7 @@ index 5749bff2c1..ee7ddb2a9f 100644
    glGenBuffers(1, &indexVBO);
    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexVBO);
 diff --git a/xbmc/pictures/SlideShowPictureGLES.cpp b/xbmc/pictures/SlideShowPictureGLES.cpp
-index ce0200616d..de41bbe77f 100644
+index ce0200616..de41bbe77 100644
 --- a/xbmc/pictures/SlideShowPictureGLES.cpp
 +++ b/xbmc/pictures/SlideShowPictureGLES.cpp
 @@ -53,6 +53,7 @@ void CSlideShowPicGLES::Render(float* x, float* y, CTexture* pTexture, UTILS::CO
@@ -2787,7 +4078,7 @@ index ce0200616d..de41bbe77f 100644
  
    glDisableVertexAttribArray(posLoc);
 diff --git a/xbmc/pvr/guilib/GUIEPGGridContainer.cpp b/xbmc/pvr/guilib/GUIEPGGridContainer.cpp
-index de3ef1059e..c50e2cbea3 100644
+index de3ef1059..c50e2cbea 100644
 --- a/xbmc/pvr/guilib/GUIEPGGridContainer.cpp
 +++ b/xbmc/pvr/guilib/GUIEPGGridContainer.cpp
 @@ -206,11 +206,23 @@ void CGUIEPGGridContainer::Process(unsigned int currentTime, CDirtyRegionList& d
@@ -3010,7 +4301,7 @@ index de3ef1059e..c50e2cbea3 100644
 +}
 \ No newline at end of file
 diff --git a/xbmc/pvr/guilib/GUIEPGGridContainer.h b/xbmc/pvr/guilib/GUIEPGGridContainer.h
-index 09acfc7426..94b6043163 100644
+index 09acfc742..94b604316 100644
 --- a/xbmc/pvr/guilib/GUIEPGGridContainer.h
 +++ b/xbmc/pvr/guilib/GUIEPGGridContainer.h
 @@ -128,6 +128,10 @@ namespace PVR
@@ -3059,8 +4350,21 @@ index 09acfc7426..94b6043163 100644
  
      std::shared_ptr<CFileItem> m_lastItem;
      std::shared_ptr<CFileItem> m_lastChannel;
+diff --git a/xbmc/rendering/RenderSystem.cpp b/xbmc/rendering/RenderSystem.cpp
+index cabbea77b..3baa8feca 100644
+--- a/xbmc/rendering/RenderSystem.cpp
++++ b/xbmc/rendering/RenderSystem.cpp
+@@ -73,7 +73,7 @@ void CRenderSystemBase::ShowSplash(const std::string& message)
+   }
+ 
+   CServiceBroker::GetWinSystem()->GetGfxContext().lock();
+-  CServiceBroker::GetWinSystem()->GetGfxContext().Clear();
++  CServiceBroker::GetWinSystem()->GetGfxContext().Clear(0xff000000);
+ 
+   RESOLUTION_INFO res = CServiceBroker::GetWinSystem()->GetGfxContext().GetResInfo();
+   CServiceBroker::GetWinSystem()->GetGfxContext().SetRenderingResolution(res, true);
 diff --git a/xbmc/rendering/RenderSystem.h b/xbmc/rendering/RenderSystem.h
-index 334b74b4f8..8e188cdf00 100644
+index 334b74b4f..8e188cdf0 100644
 --- a/xbmc/rendering/RenderSystem.h
 +++ b/xbmc/rendering/RenderSystem.h
 @@ -21,6 +21,13 @@
@@ -3095,7 +4399,7 @@ index 334b74b4f8..8e188cdf00 100644
    virtual void ApplyStateBlock() = 0;
  
 diff --git a/xbmc/rendering/gl/GLShader.cpp b/xbmc/rendering/gl/GLShader.cpp
-index e91af97b56..a67601e77c 100644
+index e91af97b5..a67601e77 100644
 --- a/xbmc/rendering/gl/GLShader.cpp
 +++ b/xbmc/rendering/gl/GLShader.cpp
 @@ -1,12 +1,11 @@
@@ -3124,7 +4428,7 @@ index e91af97b56..a67601e77c 100644
    // Vertex attributes
    m_hPos = glGetAttribLocation(ProgramHandle(),  "m_attrpos");
 diff --git a/xbmc/rendering/gl/GLShader.h b/xbmc/rendering/gl/GLShader.h
-index d5b82f3a07..8355043281 100644
+index d5b82f3a0..835504328 100644
 --- a/xbmc/rendering/gl/GLShader.h
 +++ b/xbmc/rendering/gl/GLShader.h
 @@ -1,5 +1,5 @@
@@ -3163,7 +4467,7 @@ index d5b82f3a07..8355043281 100644
    const GLfloat *m_proj = nullptr;
    const GLfloat *m_model = nullptr;
 diff --git a/xbmc/rendering/gl/RenderSystemGL.cpp b/xbmc/rendering/gl/RenderSystemGL.cpp
-index 91dfc4496a..19714b752c 100644
+index 91dfc4496..19714b752 100644
 --- a/xbmc/rendering/gl/RenderSystemGL.cpp
 +++ b/xbmc/rendering/gl/RenderSystemGL.cpp
 @@ -1,5 +1,5 @@
@@ -3343,7 +4647,7 @@ index 91dfc4496a..19714b752c 100644
  {
    std::string path = "GL/1.2/";
 diff --git a/xbmc/rendering/gl/RenderSystemGL.h b/xbmc/rendering/gl/RenderSystemGL.h
-index 191c97ff96..920024a37e 100644
+index 191c97ff9..920024a37 100644
 --- a/xbmc/rendering/gl/RenderSystemGL.h
 +++ b/xbmc/rendering/gl/RenderSystemGL.h
 @@ -1,5 +1,5 @@
@@ -3400,7 +4704,7 @@ index 191c97ff96..920024a37e 100644
  protected:
    virtual void SetVSyncImpl(bool enable) = 0;
 diff --git a/xbmc/rendering/gles/GLESShader.cpp b/xbmc/rendering/gles/GLESShader.cpp
-index 961c3f7961..1dfebf6cb7 100644
+index 961c3f796..1dfebf6cb 100644
 --- a/xbmc/rendering/gles/GLESShader.cpp
 +++ b/xbmc/rendering/gles/GLESShader.cpp
 @@ -54,6 +54,10 @@ void CGLESShader::OnCompiledAndLinked()
@@ -3415,7 +4719,7 @@ index 961c3f7961..1dfebf6cb7 100644
    // Vertex attributes
    m_hPos    = glGetAttribLocation(ProgramHandle(),  "m_attrpos");
 diff --git a/xbmc/rendering/gles/GLESShader.h b/xbmc/rendering/gles/GLESShader.h
-index 1f59895740..2fd3b0716e 100644
+index 1f5989574..2fd3b0716 100644
 --- a/xbmc/rendering/gles/GLESShader.h
 +++ b/xbmc/rendering/gles/GLESShader.h
 @@ -25,6 +25,7 @@ public:
@@ -3455,7 +4759,7 @@ index 1f59895740..2fd3b0716e 100644
    const GLfloat *m_proj;
    const GLfloat *m_model;
 diff --git a/xbmc/rendering/gles/RenderSystemGLES.cpp b/xbmc/rendering/gles/RenderSystemGLES.cpp
-index 476bde7733..72cdda1ef7 100644
+index 476bde773..72cdda1ef 100644
 --- a/xbmc/rendering/gles/RenderSystemGLES.cpp
 +++ b/xbmc/rendering/gles/RenderSystemGLES.cpp
 @@ -144,8 +144,7 @@ bool CRenderSystemGLES::ResetRenderSystem(int width, int height)
@@ -3616,7 +4920,7 @@ index 476bde7733..72cdda1ef7 100644
 +  return -1;
 +}
 diff --git a/xbmc/rendering/gles/RenderSystemGLES.h b/xbmc/rendering/gles/RenderSystemGLES.h
-index e0cd72b9c1..a6be00933e 100644
+index e0cd72b9c..a6be00933 100644
 --- a/xbmc/rendering/gles/RenderSystemGLES.h
 +++ b/xbmc/rendering/gles/RenderSystemGLES.h
 @@ -25,6 +25,7 @@ enum class ShaderMethodGLES
@@ -3664,37 +4968,147 @@ index e0cd72b9c1..a6be00933e 100644
  protected:
    virtual void SetVSyncImpl(bool enable) = 0;
 diff --git a/xbmc/settings/AdvancedSettings.cpp b/xbmc/settings/AdvancedSettings.cpp
-index cc06244799..6e868e3ee9 100644
+index cc0624479..e1699b029 100644
 --- a/xbmc/settings/AdvancedSettings.cpp
 +++ b/xbmc/settings/AdvancedSettings.cpp
-@@ -1220,7 +1220,9 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
+@@ -1220,6 +1220,9 @@ void CAdvancedSettings::ParseSettingsFile(const std::string &file)
      XMLUtils::GetInt(pElement, "algorithmdirtyregions",     m_guiAlgorithmDirtyRegions);
      XMLUtils::GetBoolean(pElement, "smartredraw", m_guiSmartRedraw);
      XMLUtils::GetBoolean(pElement, "transparentvideolayout", m_guiVideoLayoutTransparent);
--  }
-+    XMLUtils::GetInt(pElement, "anisotropicfiltering", m_guiAnisotropicFiltering);
 +    XMLUtils::GetBoolean(pElement, "fronttobackrendering", m_guiFrontToBackRendering);
-+    XMLUtils::GetBoolean(pElement, "geometryclear", m_guiGeometryClear);  }
++    XMLUtils::GetBoolean(pElement, "geometryclear", m_guiGeometryClear);
++    XMLUtils::GetBoolean(pElement, "asynctextureupload", m_guiAsyncTextureUpload);
+   }
  
    std::string seekSteps;
-   XMLUtils::GetString(pRootElement, "seeksteps", seekSteps);
 diff --git a/xbmc/settings/AdvancedSettings.h b/xbmc/settings/AdvancedSettings.h
-index 5abbed2486..10832a8e08 100644
+index 5abbed248..cd8236660 100644
 --- a/xbmc/settings/AdvancedSettings.h
 +++ b/xbmc/settings/AdvancedSettings.h
-@@ -333,7 +333,9 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
+@@ -333,6 +333,10 @@ class CAdvancedSettings : public ISettingCallback, public ISettingsHandler
      int  m_guiAlgorithmDirtyRegions;
      bool m_guiSmartRedraw;
      bool m_guiVideoLayoutTransparent{false};
--    unsigned int m_addonPackageFolderSize;
-+    int32_t m_guiAnisotropicFiltering{0};
 +    bool m_guiFrontToBackRendering{false};
-+    bool m_guiGeometryClear{false};    unsigned int m_addonPackageFolderSize;
++    bool m_guiGeometryClear{true};
++    bool m_guiAsyncTextureUpload{false};
++
+     unsigned int m_addonPackageFolderSize;
  
      bool m_jsonOutputCompact;
-     unsigned int m_jsonTcpPort;
+diff --git a/xbmc/utils/EGLUtils.cpp b/xbmc/utils/EGLUtils.cpp
+index 85f889dc9..40338121d 100644
+--- a/xbmc/utils/EGLUtils.cpp
++++ b/xbmc/utils/EGLUtils.cpp
+@@ -428,6 +428,12 @@ bool CEGLContextUtils::CreateContext(CEGLAttributesVec contextAttribs)
+     return false;
+   }
+ 
++  m_eglUploadContext =
++      eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, contextAttribs.Get());
++
++  if (m_eglUploadContext == EGL_NO_CONTEXT)
++    CLog::Log(LOGWARNING, "Failed to create EGL upload context");
++
+   return true;
+ }
+ 
+@@ -565,6 +571,12 @@ void CEGLContextUtils::DestroyContext()
+     eglDestroyContext(m_eglDisplay, m_eglContext);
+     m_eglContext = EGL_NO_CONTEXT;
+   }
++
++  if (m_eglUploadContext)
++  {
++    eglDestroyContext(m_eglDisplay, m_eglUploadContext);
++    m_eglUploadContext = EGL_NO_CONTEXT;
++  }
+ }
+ 
+ void CEGLContextUtils::DestroySurface()
+@@ -597,3 +609,49 @@ bool CEGLContextUtils::TrySwapBuffers()
+ 
+   return (eglSwapBuffers(m_eglDisplay, m_eglSurface) == EGL_TRUE);
+ }
++
++bool CEGLContextUtils::BindTextureUploadContext()
++{
++  if (m_eglDisplay == EGL_NO_DISPLAY || m_eglUploadContext == EGL_NO_CONTEXT)
++  {
++    CLog::LogF(LOGERROR, "No texture upload context found.");
++    return false;
++  }
++
++  m_textureUploadLock.lock();
++
++  if (!eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, m_eglUploadContext))
++  {
++    m_textureUploadLock.unlock();
++    CLog::LogF(LOGERROR, "Couldn't bind texture upload context.");
++    return false;
++  }
++
++  return true;
++}
++
++bool CEGLContextUtils::UnbindTextureUploadContext()
++{
++  if (m_eglDisplay == EGL_NO_DISPLAY || m_eglUploadContext == EGL_NO_CONTEXT)
++  {
++    CLog::LogF(LOGERROR, "No texture upload context found.");
++    m_textureUploadLock.unlock();
++    return false;
++  }
++
++  if (!eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
++  {
++    CLog::LogF(LOGERROR, "Couldn't release texture upload context");
++    m_textureUploadLock.unlock();
++    return false;
++  }
++
++  m_textureUploadLock.unlock();
++
++  return true;
++}
++
++bool CEGLContextUtils::HasContext()
++{
++  return eglGetCurrentContext() != EGL_NO_CONTEXT;
++}
+diff --git a/xbmc/utils/EGLUtils.h b/xbmc/utils/EGLUtils.h
+index 2db162829..f611bcbd0 100644
+--- a/xbmc/utils/EGLUtils.h
++++ b/xbmc/utils/EGLUtils.h
+@@ -8,6 +8,8 @@
+ 
+ #pragma once
+ 
++#include "threads/CriticalSection.h"
++
+ #include <array>
+ #include <set>
+ #include <stdexcept>
+@@ -219,6 +221,10 @@ public:
+     return m_eglConfig;
+   }
+ 
++  bool BindTextureUploadContext();
++  bool UnbindTextureUploadContext();
++  bool HasContext();
++
+ private:
+   void SurfaceAttrib();
+ 
+@@ -229,4 +235,6 @@ private:
+   EGLSurface m_eglSurface{EGL_NO_SURFACE};
+   EGLContext m_eglContext{EGL_NO_CONTEXT};
+   EGLConfig m_eglConfig{}, m_eglHDRConfig{};
++  EGLContext m_eglUploadContext{EGL_NO_CONTEXT};
++  mutable CCriticalSection m_textureUploadLock;
+ };
 diff --git a/xbmc/utils/TransformMatrix.h b/xbmc/utils/TransformMatrix.h
-index a9bf8fdc74..0287ad55c5 100644
+index a9bf8fdc7..0287ad55c 100644
 --- a/xbmc/utils/TransformMatrix.h
 +++ b/xbmc/utils/TransformMatrix.h
 @@ -36,6 +36,7 @@ public:
@@ -3793,7 +5207,7 @@ index a9bf8fdc74..0287ad55c5 100644
         (!a.identity && !b.identity &&
          std::equal(&a.m[0][0], &a.m[0][0] + sizeof(a.m) / sizeof(a.m[0][0]), &b.m[0][0])));
 diff --git a/xbmc/video/dialogs/GUIDialogTeletext.cpp b/xbmc/video/dialogs/GUIDialogTeletext.cpp
-index 13c706b12f..26280c7126 100644
+index 13c706b12..26280c712 100644
 --- a/xbmc/video/dialogs/GUIDialogTeletext.cpp
 +++ b/xbmc/video/dialogs/GUIDialogTeletext.cpp
 @@ -85,6 +85,9 @@ void CGUIDialogTeletext::Process(unsigned int currentTime, CDirtyRegionList &dir
@@ -3816,7 +5230,7 @@ index 13c706b12f..26280c7126 100644
    CGUIDialog::Render();
  }
 diff --git a/xbmc/video/windows/GUIWindowFullScreen.cpp b/xbmc/video/windows/GUIWindowFullScreen.cpp
-index 1fccba980a..eee981056c 100644
+index 1fccba980..28974e405 100644
 --- a/xbmc/video/windows/GUIWindowFullScreen.cpp
 +++ b/xbmc/video/windows/GUIWindowFullScreen.cpp
 @@ -22,6 +22,7 @@
@@ -3827,16 +5241,18 @@ index 1fccba980a..eee981056c 100644
  #include "settings/DisplaySettings.h"
  #include "settings/Settings.h"
  #include "settings/SettingsComponent.h"
-@@ -182,6 +183,8 @@ void CGUIWindowFullScreen::ClearBackground()
+@@ -182,6 +183,10 @@ void CGUIWindowFullScreen::ClearBackground()
    const auto appPlayer = components.GetComponent<CApplicationPlayer>();
    if (appPlayer->IsRenderingVideoLayer())
      CServiceBroker::GetWinSystem()->GetGfxContext().Clear(0);
++  else if (!CServiceBroker::GetSettingsComponent()->GetAdvancedSettings()->m_guiGeometryClear)
++    CServiceBroker::GetWinSystem()->GetGfxContext().Clear(0xff000000);
 +  else
 +    CServiceBroker::GetWinSystem()->GetGfxContext().Clear();
  }
  
  void CGUIWindowFullScreen::OnWindowLoaded()
-@@ -377,11 +380,19 @@ void CGUIWindowFullScreen::Process(unsigned int currentTime, CDirtyRegionList &d
+@@ -377,11 +382,19 @@ void CGUIWindowFullScreen::Process(unsigned int currentTime, CDirtyRegionList &d
  
  void CGUIWindowFullScreen::Render()
  {
@@ -3862,7 +5278,7 @@ index 1fccba980a..eee981056c 100644
  }
  
 diff --git a/xbmc/windowing/GraphicContext.cpp b/xbmc/windowing/GraphicContext.cpp
-index e3300e925c..ebaec5b715 100644
+index e3300e925..ebaec5b71 100644
 --- a/xbmc/windowing/GraphicContext.cpp
 +++ b/xbmc/windowing/GraphicContext.cpp
 @@ -580,6 +580,11 @@ void CGraphicContext::ResetScreenParameters(RESOLUTION res)
@@ -3926,7 +5342,7 @@ index e3300e925c..ebaec5b715 100644
  {
    m_fFPSOverride = fps;
 diff --git a/xbmc/windowing/GraphicContext.h b/xbmc/windowing/GraphicContext.h
-index 0c5201f1e7..36aff34608 100644
+index 0c5201f1e..36aff3460 100644
 --- a/xbmc/windowing/GraphicContext.h
 +++ b/xbmc/windowing/GraphicContext.h
 @@ -57,6 +57,13 @@ enum AdjustRefreshRate
@@ -4002,11 +5418,116 @@ index 0c5201f1e7..36aff34608 100644
 +  RENDER_ORDER m_renderOrder{RENDER_ORDER_ALL_BACK_TO_FRONT};
 +  uint32_t m_layer{2};
  };
+diff --git a/xbmc/windowing/WinSystem.h b/xbmc/windowing/WinSystem.h
+index 88218db9e..0724fca40 100644
+--- a/xbmc/windowing/WinSystem.h
++++ b/xbmc/windowing/WinSystem.h
+@@ -260,6 +260,24 @@ public:
+    */
+   std::pair<bool, int> GetDitherSettings();
+ 
++  /*!
++   * \brief Binds a shared context to the current thread, in order to upload textures asynchronously.
++   * \return Return true if a texture upload context exists and the binding succeeds.
++   */
++  virtual bool BindTextureUploadContext() { return false; }
++
++  /*!
++   * \brief Unbinds the shared context.
++   * \return Return true if the texture upload context has been unbound.
++   */
++  virtual bool UnbindTextureUploadContext() { return false; }
++
++  /*!
++   * \brief Checks if a graphics context is already bound to the current thread.
++   * \return Return true if so.
++   */
++  virtual bool HasContext() { return false; }
++
+ protected:
+   void UpdateDesktopResolution(RESOLUTION_INFO& newRes, const std::string &output, int width, int height, float refreshRate, uint32_t dwFlags);
+   void UpdateDesktopResolution(RESOLUTION_INFO& newRes,
 diff --git a/xbmc/windowing/X11/GLContextEGL.cpp b/xbmc/windowing/X11/GLContextEGL.cpp
-index 7999e76b98..a7c4c3ea00 100644
+index 7999e76b9..08b229be4 100644
 --- a/xbmc/windowing/X11/GLContextEGL.cpp
 +++ b/xbmc/windowing/X11/GLContextEGL.cpp
-@@ -341,7 +341,7 @@ bool CGLContextEGL::SuitableCheck(EGLDisplay eglDisplay, EGLConfig config)
+@@ -14,6 +14,7 @@
+ #include "GLContextEGL.h"
+ 
+ #include "ServiceBroker.h"
++#include "commons/ilog.h"
+ #include "settings/AdvancedSettings.h"
+ #include "settings/SettingsComponent.h"
+ #include "utils/log.h"
+@@ -21,12 +22,13 @@
+ #include <clocale>
+ #include <mutex>
+ 
+-#include <EGL/eglext.h>
+ #include <unistd.h>
+ 
+ #include "PlatformDefs.h"
+ #include "system_gl.h"
+ 
++#include <EGL/eglext.h>
++
+ #define EGL_NO_CONFIG (EGLConfig)0
+ 
+ CGLContextEGL::CGLContextEGL(Display* dpy, EGLint renderingApi)
+@@ -160,6 +162,8 @@ bool CGLContextEGL::Refresh(bool force, int screen, Window glWindow, bool &newCo
+       EGL_NONE
+   };
+   m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT, contextAttributes);
++  m_eglUploadContext = eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, contextAttributes);
++
+   if (m_eglContext == EGL_NO_CONTEXT)
+   {
+     EGLint contextAttributes[] =
+@@ -168,6 +172,8 @@ bool CGLContextEGL::Refresh(bool force, int screen, Window glWindow, bool &newCo
+       EGL_NONE
+     };
+     m_eglContext = eglCreateContext(m_eglDisplay, m_eglConfig, EGL_NO_CONTEXT, contextAttributes);
++    m_eglUploadContext =
++        eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, contextAttributes);
+ 
+     if (m_eglContext == EGL_NO_CONTEXT)
+     {
+@@ -190,6 +196,9 @@ bool CGLContextEGL::Refresh(bool force, int screen, Window glWindow, bool &newCo
+ 
+   m_eglGetSyncValuesCHROMIUM = (PFNEGLGETSYNCVALUESCHROMIUMPROC)eglGetProcAddress("eglGetSyncValuesCHROMIUM");
+ 
++  if (m_eglUploadContext == EGL_NO_CONTEXT)
++    CLog::Log(LOGWARNING, "failed to create EGL upload context");
++
+   m_usePB = false;
+   return true;
+ }
+@@ -286,6 +295,11 @@ bool CGLContextEGL::CreatePB()
+     return false;
+   }
+ 
++  m_eglUploadContext = eglCreateContext(m_eglDisplay, m_eglConfig, m_eglContext, contextAttributes);
++
++  if (m_eglUploadContext == EGL_NO_CONTEXT)
++    CLog::Log(LOGWARNING, "Failed to create EGL upload context");
++
+   m_usePB = true;
+   return true;
+ }
+@@ -300,6 +314,12 @@ void CGLContextEGL::Destroy()
+     m_eglContext = EGL_NO_CONTEXT;
+   }
+ 
++  if (m_eglUploadContext)
++  {
++    eglDestroyContext(m_eglDisplay, m_eglUploadContext);
++    m_eglUploadContext = EGL_NO_CONTEXT;
++  }
++
+   if (m_eglSurface)
+   {
+     eglDestroySurface(m_eglDisplay, m_eglSurface);
+@@ -341,7 +361,7 @@ bool CGLContextEGL::SuitableCheck(EGLDisplay eglDisplay, EGLConfig config)
      return false;
    if (!eglGetConfigAttrib(eglDisplay, config, EGL_BLUE_SIZE, &value) || value < 8)
      return false;
@@ -4015,8 +5536,277 @@ index 7999e76b98..a7c4c3ea00 100644
      return false;
  
    return true;
+@@ -534,6 +554,52 @@ uint64_t CGLContextEGL::GetVblankTiming(uint64_t &msc, uint64_t &interval)
+   return ret;
+ }
+ 
++bool CGLContextEGL::BindTextureUploadContext()
++{
++  if (m_eglDisplay == EGL_NO_DISPLAY || m_eglUploadContext == EGL_NO_CONTEXT)
++  {
++    CLog::LogF(LOGERROR, "No texture upload context found.");
++    return false;
++  }
++
++  m_textureUploadLock.lock();
++
++  if (!eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, m_eglUploadContext))
++  {
++    m_textureUploadLock.unlock();
++    CLog::LogF(LOGERROR, "Couldn't bind texture upload context.");
++    return false;
++  }
++
++  return true;
++}
++
++bool CGLContextEGL::UnbindTextureUploadContext()
++{
++  if (m_eglDisplay == EGL_NO_DISPLAY || m_eglUploadContext == EGL_NO_CONTEXT)
++  {
++    CLog::LogF(LOGERROR, "No texture upload context found.");
++    m_textureUploadLock.unlock();
++    return false;
++  }
++
++  if (!eglMakeCurrent(m_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT))
++  {
++    CLog::LogF(LOGERROR, "Couldn't release texture upload context");
++    m_textureUploadLock.unlock();
++    return false;
++  }
++
++  m_textureUploadLock.unlock();
++
++  return true;
++}
++
++bool CGLContextEGL::HasContext()
++{
++  return eglGetCurrentContext() != EGL_NO_CONTEXT;
++}
++
+ void CGLContextEGL::QueryExtensions()
+ {
+   std::string extensions = eglQueryString(m_eglDisplay, EGL_EXTENSIONS);
+diff --git a/xbmc/windowing/X11/GLContextEGL.h b/xbmc/windowing/X11/GLContextEGL.h
+index 441787b67..7c38f8125 100644
+--- a/xbmc/windowing/X11/GLContextEGL.h
++++ b/xbmc/windowing/X11/GLContextEGL.h
+@@ -9,11 +9,12 @@
+ #pragma once
+ 
+ #include "GLContext.h"
+-#include "system_egl.h"
+ #include "threads/CriticalSection.h"
+ 
+ #include <cstdint>
+ 
++#include "system_egl.h"
++
+ #include <EGL/eglext.h>
+ #ifdef HAVE_EGLEXTANGLE
+ #include <EGL/eglext_angle.h>
+@@ -36,6 +37,10 @@ public:
+   void QueryExtensions() override;
+   uint64_t GetVblankTiming(uint64_t &msc, uint64_t &interval) override;
+ 
++  bool BindTextureUploadContext();
++  bool UnbindTextureUploadContext();
++  bool HasContext();
++
+   EGLint m_renderingApi;
+   EGLDisplay m_eglDisplay = EGL_NO_DISPLAY;
+   EGLSurface m_eglSurface = EGL_NO_SURFACE;
+@@ -60,4 +65,7 @@ protected:
+   CCriticalSection m_syncLock;
+ 
+   bool m_usePB = false;
++
++  EGLContext m_eglUploadContext = EGL_NO_CONTEXT;
++  mutable CCriticalSection m_textureUploadLock;
+ };
+diff --git a/xbmc/windowing/X11/WinSystemX11GLContext.cpp b/xbmc/windowing/X11/WinSystemX11GLContext.cpp
+index 44ddb8985..8b3fda053 100644
+--- a/xbmc/windowing/X11/WinSystemX11GLContext.cpp
++++ b/xbmc/windowing/X11/WinSystemX11GLContext.cpp
+@@ -112,6 +112,30 @@ EGLConfig CWinSystemX11GLContext::GetEGLConfig() const
+   return static_cast<CGLContextEGL*>(m_pGLContext)->m_eglConfig;
+ }
+ 
++bool CWinSystemX11GLContext::BindTextureUploadContext()
++{
++  if (m_pGLContext)
++    return static_cast<CGLContextEGL*>(m_pGLContext)->BindTextureUploadContext();
++  else
++    return false;
++}
++
++bool CWinSystemX11GLContext::UnbindTextureUploadContext()
++{
++  if (m_pGLContext)
++    return static_cast<CGLContextEGL*>(m_pGLContext)->UnbindTextureUploadContext();
++  else
++    return false;
++}
++
++bool CWinSystemX11GLContext::HasContext()
++{
++  if (m_pGLContext)
++    return static_cast<CGLContextEGL*>(m_pGLContext)->HasContext();
++  else
++    return false;
++}
++
+ bool CWinSystemX11GLContext::SetWindow(int width, int height, bool fullscreen, const std::string &output, int *winstate)
+ {
+   int newwin = 0;
+diff --git a/xbmc/windowing/X11/WinSystemX11GLContext.h b/xbmc/windowing/X11/WinSystemX11GLContext.h
+index eda6772a4..2c11b9abe 100644
+--- a/xbmc/windowing/X11/WinSystemX11GLContext.h
++++ b/xbmc/windowing/X11/WinSystemX11GLContext.h
+@@ -58,6 +58,10 @@ public:
+   EGLContext GetEGLContext() const;
+   EGLConfig GetEGLConfig() const;
+ 
++  bool BindTextureUploadContext() override;
++  bool UnbindTextureUploadContext() override;
++  bool HasContext() override;
++
+ protected:
+   bool SetWindow(int width, int height, bool fullscreen, const std::string &output, int *winstate = NULL) override;
+   void PresentRenderImpl(bool rendered) override;
+diff --git a/xbmc/windowing/X11/WinSystemX11GLESContext.cpp b/xbmc/windowing/X11/WinSystemX11GLESContext.cpp
+index e2367d3e6..436f75a09 100644
+--- a/xbmc/windowing/X11/WinSystemX11GLESContext.cpp
++++ b/xbmc/windowing/X11/WinSystemX11GLESContext.cpp
+@@ -92,6 +92,30 @@ EGLConfig CWinSystemX11GLESContext::GetEGLConfig() const
+   return m_pGLContext->m_eglConfig;
+ }
+ 
++bool CWinSystemX11GLESContext::BindTextureUploadContext()
++{
++  if (m_pGLContext)
++    return static_cast<CGLContextEGL*>(m_pGLContext)->BindTextureUploadContext();
++  else
++    return false;
++}
++
++bool CWinSystemX11GLESContext::UnbindTextureUploadContext()
++{
++  if (m_pGLContext)
++    return static_cast<CGLContextEGL*>(m_pGLContext)->UnbindTextureUploadContext();
++  else
++    return false;
++}
++
++bool CWinSystemX11GLESContext::HasContext()
++{
++  if (m_pGLContext)
++    return static_cast<CGLContextEGL*>(m_pGLContext)->HasContext();
++  else
++    return false;
++}
++
+ bool CWinSystemX11GLESContext::SetWindow(int width, int height, bool fullscreen, const std::string& output, int* winstate)
+ {
+   int newwin = 0;
+diff --git a/xbmc/windowing/X11/WinSystemX11GLESContext.h b/xbmc/windowing/X11/WinSystemX11GLESContext.h
+index cdb1cc4f8..1f066247b 100644
+--- a/xbmc/windowing/X11/WinSystemX11GLESContext.h
++++ b/xbmc/windowing/X11/WinSystemX11GLESContext.h
+@@ -46,6 +46,10 @@ public:
+   EGLContext GetEGLContext() const;
+   EGLConfig GetEGLConfig() const;
+ 
++  bool BindTextureUploadContext() override;
++  bool UnbindTextureUploadContext() override;
++  bool HasContext() override;
++
+ protected:
+   bool SetWindow(int width, int height, bool fullscreen, const std::string& output, int* winstate = nullptr) override;
+   void PresentRenderImpl(bool rendered) override;
+diff --git a/xbmc/windowing/gbm/WinSystemGbmEGLContext.cpp b/xbmc/windowing/gbm/WinSystemGbmEGLContext.cpp
+index fac914d5e..b7e02d58b 100644
+--- a/xbmc/windowing/gbm/WinSystemGbmEGLContext.cpp
++++ b/xbmc/windowing/gbm/WinSystemGbmEGLContext.cpp
+@@ -150,3 +150,18 @@ void CWinSystemGbmEGLContext::delete_CVaapiProxy::operator()(CVaapiProxy *p) con
+ {
+   VaapiProxyDelete(p);
+ }
++
++bool CWinSystemGbmEGLContext::BindTextureUploadContext()
++{
++  return m_eglContext.BindTextureUploadContext();
++}
++
++bool CWinSystemGbmEGLContext::UnbindTextureUploadContext()
++{
++  return m_eglContext.UnbindTextureUploadContext();
++}
++
++bool CWinSystemGbmEGLContext::HasContext()
++{
++  return m_eglContext.HasContext();
++}
+diff --git a/xbmc/windowing/gbm/WinSystemGbmEGLContext.h b/xbmc/windowing/gbm/WinSystemGbmEGLContext.h
+index fbd52354e..e8b0a76d4 100644
+--- a/xbmc/windowing/gbm/WinSystemGbmEGLContext.h
++++ b/xbmc/windowing/gbm/WinSystemGbmEGLContext.h
+@@ -35,6 +35,10 @@ public:
+                        RESOLUTION_INFO& res) override;
+   bool DestroyWindow() override;
+ 
++  bool BindTextureUploadContext() override;
++  bool UnbindTextureUploadContext() override;
++  bool HasContext() override;
++
+ protected:
+   CWinSystemGbmEGLContext(EGLenum platform, std::string const& platformExtension)
+     : CWinSystemEGL{platform, platformExtension}
+diff --git a/xbmc/windowing/wayland/WinSystemWaylandEGLContext.cpp b/xbmc/windowing/wayland/WinSystemWaylandEGLContext.cpp
+index 6750c547d..f972ad549 100644
+--- a/xbmc/windowing/wayland/WinSystemWaylandEGLContext.cpp
++++ b/xbmc/windowing/wayland/WinSystemWaylandEGLContext.cpp
+@@ -102,6 +102,21 @@ bool CWinSystemWaylandEGLContext::DestroyWindowSystem()
+   return CWinSystemWaylandImpl::DestroyWindowSystem();
+ }
+ 
++bool CWinSystemWaylandEGLContext::BindTextureUploadContext()
++{
++  return m_eglContext.BindTextureUploadContext();
++}
++
++bool CWinSystemWaylandEGLContext::UnbindTextureUploadContext()
++{
++  return m_eglContext.UnbindTextureUploadContext();
++}
++
++bool CWinSystemWaylandEGLContext::HasContext()
++{
++  return m_eglContext.HasContext();
++}
++
+ CSizeInt CWinSystemWaylandEGLContext::GetNativeWindowAttachedSize()
+ {
+   int width, height;
+diff --git a/xbmc/windowing/wayland/WinSystemWaylandEGLContext.h b/xbmc/windowing/wayland/WinSystemWaylandEGLContext.h
+index 68511f4ff..a6e0a1440 100644
+--- a/xbmc/windowing/wayland/WinSystemWaylandEGLContext.h
++++ b/xbmc/windowing/wayland/WinSystemWaylandEGLContext.h
+@@ -43,6 +43,10 @@ public:
+   bool DestroyWindow() override;
+   bool DestroyWindowSystem() override;
+ 
++  bool BindTextureUploadContext() override;
++  bool UnbindTextureUploadContext() override;
++  bool HasContext() override;
++
+ protected:
+   /**
+    * Inheriting classes should override InitWindowSystem() without parameters
 diff --git a/xbmc/windows/GUIWindowDebugInfo.cpp b/xbmc/windows/GUIWindowDebugInfo.cpp
-index 764e6b0b71..866d506fe3 100644
+index 764e6b0b7..866d506fe 100644
 --- a/xbmc/windows/GUIWindowDebugInfo.cpp
 +++ b/xbmc/windows/GUIWindowDebugInfo.cpp
 @@ -179,7 +179,13 @@ void CGUIWindowDebugInfo::Process(unsigned int currentTime, CDirtyRegionList &di
@@ -4033,6 +5823,24 @@ index 764e6b0b71..866d506fe3 100644
      m_layout->RenderOutline(m_renderRegion.x1, m_renderRegion.y1, 0xffffffff, 0xff000000, 0, 0);
 +  CServiceBroker::GetWinSystem()->GetGfxContext().SetRenderOrder(renderOrder);
  }
--- 
-2.48.1
-
+diff --git a/xbmc/windows/GUIWindowScreensaverDim.cpp b/xbmc/windows/GUIWindowScreensaverDim.cpp
+index f617fba40..61b056d0d 100644
+--- a/xbmc/windows/GUIWindowScreensaverDim.cpp
++++ b/xbmc/windows/GUIWindowScreensaverDim.cpp
+@@ -68,10 +68,16 @@ void CGUIWindowScreensaverDim::Process(unsigned int currentTime, CDirtyRegionLis
+ 
+ void CGUIWindowScreensaverDim::Render()
+ {
++  RENDER_ORDER renderOrder = CServiceBroker::GetWinSystem()->GetGfxContext().GetRenderOrder();
++  if (renderOrder == RENDER_ORDER_FRONT_TO_BACK)
++    return;
++  else if (renderOrder == RENDER_ORDER_BACK_TO_FRONT)
++    CServiceBroker::GetWinSystem()->GetGfxContext().SetRenderOrder(RENDER_ORDER_ALL_BACK_TO_FRONT);
+   // draw a translucent black quad - fading is handled by the window animation
+   UTILS::COLOR::Color color = (static_cast<UTILS::COLOR::Color>(m_dimLevel * 2.55f) & 0xff) << 24;
+   color = CServiceBroker::GetWinSystem()->GetGfxContext().MergeAlpha(color);
+   CRect rect(0, 0, (float)CServiceBroker::GetWinSystem()->GetGfxContext().GetWidth(), (float)CServiceBroker::GetWinSystem()->GetGfxContext().GetHeight());
+   CGUITexture::DrawQuad(rect, color);
+   CGUIDialog::Render();
++  CServiceBroker::GetWinSystem()->GetGfxContext().SetRenderOrder(renderOrder);
+ }
