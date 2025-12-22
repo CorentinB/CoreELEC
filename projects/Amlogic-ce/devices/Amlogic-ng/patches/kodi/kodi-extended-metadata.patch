@@ -1,0 +1,323 @@
+diff --git a/xbmc/GUIInfoManager.cpp b/xbmc/GUIInfoManager.cpp
+--- a/xbmc/GUIInfoManager.cpp	2025-12-22 17:28:40
++++ b/xbmc/GUIInfoManager.cpp	2025-12-22 17:29:07
+@@ -7194,6 +7194,17 @@
+                                   { "isvideoextra",     LISTITEM_ISVIDEOEXTRA },
+                                   { "videoversionname", LISTITEM_VIDEOVERSION_NAME },
+                                   { "hasvideoextras",   LISTITEM_HASVIDEOEXTRAS },
++                                  // Extended metadata InfoLabels (CoreELEC extension)
++                                  { "imdbrating",       LISTITEM_IMDB_RATING },
++                                  { "tmdbrating",       LISTITEM_TMDB_RATING },
++                                  { "rtrating",         LISTITEM_RT_RATING },
++                                  { "metacriticrating", LISTITEM_METACRITIC_RATING },
++                                  { "traktrating",      LISTITEM_TRAKT_RATING },
++                                  { "tvshowstatus",     LISTITEM_TVSHOW_STATUS },
++                                  { "nextaired",        LISTITEM_NEXT_AIRED },
++                                  { "totalseasons",     LISTITEM_TOTAL_SEASONS_EXT },
++                                  { "totalepisodes",    LISTITEM_TOTAL_EPISODES_EXT },
++                                  { "network",          LISTITEM_NETWORK },
+ };
+ // clang-format on
+ 
+diff --git a/xbmc/guilib/guiinfo/GUIInfoLabels.h b/xbmc/guilib/guiinfo/GUIInfoLabels.h
+--- a/xbmc/guilib/guiinfo/GUIInfoLabels.h	2025-12-22 17:28:39
++++ b/xbmc/guilib/guiinfo/GUIInfoLabels.h	2025-12-22 17:28:52
+@@ -981,6 +981,19 @@
+ #define LISTITEM_VIDEOVERSION_NAME  (LISTITEM_START + 215)
+ #define LISTITEM_HASVIDEOEXTRAS     (LISTITEM_START + 216)
+ 
++// Extended metadata InfoLabels (CoreELEC extension)
++// These provide direct access to specific ratings in list views
++#define LISTITEM_IMDB_RATING        (LISTITEM_START + 220)
++#define LISTITEM_TMDB_RATING        (LISTITEM_START + 221)
++#define LISTITEM_RT_RATING          (LISTITEM_START + 222)
++#define LISTITEM_METACRITIC_RATING  (LISTITEM_START + 223)
++#define LISTITEM_TRAKT_RATING       (LISTITEM_START + 224)
++#define LISTITEM_TVSHOW_STATUS      (LISTITEM_START + 225)
++#define LISTITEM_NEXT_AIRED         (LISTITEM_START + 226)
++#define LISTITEM_TOTAL_SEASONS_EXT  (LISTITEM_START + 227)
++#define LISTITEM_TOTAL_EPISODES_EXT (LISTITEM_START + 228)
++#define LISTITEM_NETWORK            (LISTITEM_START + 229)
++
+ #define LISTITEM_END                (LISTITEM_START + 2500)
+ 
+ #define CONDITIONAL_LABEL_START       (LISTITEM_END + 1) // 37501
+diff --git a/xbmc/guilib/guiinfo/VideoGUIInfo.cpp b/xbmc/guilib/guiinfo/VideoGUIInfo.cpp
+--- a/xbmc/guilib/guiinfo/VideoGUIInfo.cpp	2025-12-22 17:28:39
++++ b/xbmc/guilib/guiinfo/VideoGUIInfo.cpp	2025-12-22 17:29:23
+@@ -171,6 +171,68 @@
+         if (!info.GetData3().empty())
+           value = tag->GetUniqueID(info.GetData3());
+         return true;
++
++      // Extended metadata ratings (CoreELEC extension)
++      // These read from dedicated member variables populated from SQL view columns
++      case LISTITEM_IMDB_RATING:
++        if (tag->m_fImdbRating > 0.f)
++        {
++          value = StringUtils::FormatNumber(tag->m_fImdbRating);
++          return true;
++        }
++        return false;
++      case LISTITEM_TMDB_RATING:
++        if (tag->m_fTmdbRating > 0.f)
++        {
++          value = StringUtils::FormatNumber(tag->m_fTmdbRating);
++          return true;
++        }
++        return false;
++      case LISTITEM_RT_RATING:
++        if (tag->m_fRtRating > 0.f)
++        {
++          value = StringUtils::FormatNumber(tag->m_fRtRating);
++          return true;
++        }
++        return false;
++      case LISTITEM_METACRITIC_RATING:
++        if (tag->m_fMetacriticRating > 0.f)
++        {
++          value = StringUtils::FormatNumber(tag->m_fMetacriticRating);
++          return true;
++        }
++        return false;
++      case LISTITEM_TRAKT_RATING:
++        if (tag->m_fTraktRating > 0.f)
++        {
++          value = StringUtils::FormatNumber(tag->m_fTraktRating);
++          return true;
++        }
++        return false;
++      case LISTITEM_TVSHOW_STATUS:
++        value = tag->m_strStatus;
++        return !value.empty();
++      case LISTITEM_NEXT_AIRED:
++        value = tag->m_strNextAired;
++        return !value.empty();
++      case LISTITEM_TOTAL_SEASONS_EXT:
++        if (tag->m_iTotalSeasonsExt > 0)
++        {
++          value = std::to_string(tag->m_iTotalSeasonsExt);
++          return true;
++        }
++        return false;
++      case LISTITEM_TOTAL_EPISODES_EXT:
++        if (tag->m_iTotalEpisodesExt > 0)
++        {
++          value = std::to_string(tag->m_iTotalEpisodesExt);
++          return true;
++        }
++        return false;
++      case LISTITEM_NETWORK:
++        value = tag->m_strNetwork;
++        return !value.empty();
++
+       case VIDEOPLAYER_RATING:
+       case LISTITEM_RATING:
+       {
+diff --git a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
+--- a/xbmc/video/VideoDatabase.cpp	2025-12-22 17:28:39
++++ b/xbmc/video/VideoDatabase.cpp	2025-12-22 17:32:40
+@@ -138,6 +138,9 @@
+   for (int i = 0; i < VIDEODB_MAX_COLUMNS; i++)
+     columns += StringUtils::Format(",c{:02} text", i);
+ 
++  // Extended metadata columns (CoreELEC extension)
++  columns += ", status TEXT, next_aired TEXT, total_seasons_ext INTEGER";
++  columns += ", total_episodes_ext INTEGER, network TEXT";
+   columns += ", userrating integer, duration INTEGER)";
+   m_pDS->exec(columns);
+ 
+@@ -197,6 +200,11 @@
+   CLog::Log(LOGINFO, "create rating table");
+   m_pDS->exec("CREATE TABLE rating (rating_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, rating_type TEXT, rating FLOAT, votes INTEGER)");
+ 
++  // Network table for TV shows (CoreELEC extension)
++  CLog::Log(LOGINFO, "create network table (CoreELEC extension)");
++  m_pDS->exec("CREATE TABLE IF NOT EXISTS network (network_id INTEGER PRIMARY KEY, name TEXT UNIQUE)");
++  m_pDS->exec("CREATE TABLE IF NOT EXISTS network_link (network_id INTEGER, media_id INTEGER, media_type TEXT, link_order INTEGER DEFAULT 0)");
++
+   CLog::Log(LOGINFO, "create uniqueid table");
+   m_pDS->exec("CREATE TABLE uniqueid (uniqueid_id INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, value TEXT, type TEXT)");
+ 
+@@ -392,7 +400,18 @@
+                                       "  rating.votes AS votes, "
+                                       "  rating.rating_type AS rating_type, "
+                                       "  uniqueid.value AS uniqueid_value, "
+-                                      "  uniqueid.type AS uniqueid_type "
++                                      "  uniqueid.type AS uniqueid_type, "
++                                      // Extended metadata: specific rating subqueries (CoreELEC extension)
++                                      "  (SELECT r.rating FROM rating r WHERE r.media_id = episode.idEpisode "
++                                      "   AND r.media_type = 'episode' AND r.rating_type = 'imdb' LIMIT 1) AS imdb_rating, "
++                                      "  (SELECT r.rating FROM rating r WHERE r.media_id = episode.idEpisode "
++                                      "   AND r.media_type = 'episode' AND r.rating_type = 'themoviedb' LIMIT 1) AS tmdb_rating, "
++                                      "  (SELECT r.rating FROM rating r WHERE r.media_id = episode.idEpisode "
++                                      "   AND r.media_type = 'episode' AND r.rating_type = 'tomatometerallcritics' LIMIT 1) AS rt_rating, "
++                                      "  (SELECT r.rating FROM rating r WHERE r.media_id = episode.idEpisode "
++                                      "   AND r.media_type = 'episode' AND r.rating_type = 'metacritic' LIMIT 1) AS metacritic_rating, "
++                                      "  (SELECT r.rating FROM rating r WHERE r.media_id = episode.idEpisode "
++                                      "   AND r.media_type = 'episode' AND r.rating_type = 'trakt' LIMIT 1) AS trakt_rating "
+                                       "FROM episode"
+                                       "  JOIN files ON"
+                                       "    files.idFile=episode.idFile"
+@@ -462,7 +481,20 @@
+                                      "  rating.rating_type AS rating_type, "
+                                      "  uniqueid.value AS uniqueid_value, "
+                                      "  uniqueid.type AS uniqueid_type, "
+-                                     "  tvshowcounts.inProgressCount AS inProgressCount "
++                                     "  tvshowcounts.inProgressCount AS inProgressCount, "
++                                     // Extended metadata: specific rating subqueries (CoreELEC extension)
++                                     "  (SELECT r.rating FROM rating r WHERE r.media_id = tvshow.idShow "
++                                     "   AND r.media_type = 'tvshow' AND r.rating_type = 'imdb' LIMIT 1) AS imdb_rating, "
++                                     "  (SELECT r.rating FROM rating r WHERE r.media_id = tvshow.idShow "
++                                     "   AND r.media_type = 'tvshow' AND r.rating_type = 'themoviedb' LIMIT 1) AS tmdb_rating, "
++                                     "  (SELECT r.rating FROM rating r WHERE r.media_id = tvshow.idShow "
++                                     "   AND r.media_type = 'tvshow' AND r.rating_type = 'trakt' LIMIT 1) AS trakt_rating, "
++                                     // Extended metadata columns from tvshow table (CoreELEC extension)
++                                     "  tvshow.status AS tvshow_status, "
++                                     "  tvshow.next_aired AS tvshow_next_aired, "
++                                     "  tvshow.total_seasons_ext AS tvshow_total_seasons_ext, "
++                                     "  tvshow.total_episodes_ext AS tvshow_total_episodes_ext, "
++                                     "  tvshow.network AS tvshow_network "
+                                      "FROM tvshow"
+                                      "  LEFT JOIN tvshowlinkpath_minview ON "
+                                      "    tvshowlinkpath_minview.idShow=tvshow.idShow"
+@@ -593,7 +625,18 @@
+                  "  vv.idFile AS videoVersionIdFile, "
+                  "  vvt.id AS videoVersionTypeId,"
+                  "  vvt.name AS videoVersionTypeName,"
+-                 "  vvt.itemType AS videoVersionTypeItemType "
++                 "  vvt.itemType AS videoVersionTypeItemType, "
++                 // Extended metadata: specific rating subqueries (CoreELEC extension)
++                 "  (SELECT r.rating FROM rating r WHERE r.media_id = movie.idMovie "
++                 "   AND r.media_type = 'movie' AND r.rating_type = 'imdb' LIMIT 1) AS imdb_rating, "
++                 "  (SELECT r.rating FROM rating r WHERE r.media_id = movie.idMovie "
++                 "   AND r.media_type = 'movie' AND r.rating_type = 'themoviedb' LIMIT 1) AS tmdb_rating, "
++                 "  (SELECT r.rating FROM rating r WHERE r.media_id = movie.idMovie "
++                 "   AND r.media_type = 'movie' AND r.rating_type = 'tomatometerallcritics' LIMIT 1) AS rt_rating, "
++                 "  (SELECT r.rating FROM rating r WHERE r.media_id = movie.idMovie "
++                 "   AND r.media_type = 'movie' AND r.rating_type = 'metacritic' LIMIT 1) AS metacritic_rating, "
++                 "  (SELECT r.rating FROM rating r WHERE r.media_id = movie.idMovie "
++                 "   AND r.media_type = 'movie' AND r.rating_type = 'trakt' LIMIT 1) AS trakt_rating "
+                  "FROM movie"
+                  "  LEFT JOIN sets ON"
+                  "    sets.idSet = movie.idSet"
+@@ -4370,6 +4413,14 @@
+                     record->at(VIDEODB_DETAILS_MOVIE_VOTES).get_asInt(),
+                     record->at(VIDEODB_DETAILS_MOVIE_RATING_TYPE).get_asString(), true);
+   details.SetUniqueID(record->at(VIDEODB_DETAILS_MOVIE_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_MOVIE_UNIQUEID_TYPE).get_asString() ,true);
++
++  // Extended metadata: read specific ratings from view columns (CoreELEC extension)
++  details.m_fImdbRating = record->at(VIDEODB_DETAILS_MOVIE_IMDB_RATING).get_asFloat();
++  details.m_fTmdbRating = record->at(VIDEODB_DETAILS_MOVIE_TMDB_RATING).get_asFloat();
++  details.m_fRtRating = record->at(VIDEODB_DETAILS_MOVIE_RT_RATING).get_asFloat();
++  details.m_fMetacriticRating = record->at(VIDEODB_DETAILS_MOVIE_METACRITIC_RATING).get_asFloat();
++  details.m_fTraktRating = record->at(VIDEODB_DETAILS_MOVIE_TRAKT_RATING).get_asFloat();
++
+   std::string premieredString = record->at(VIDEODB_DETAILS_MOVIE_PREMIERED).get_asString();
+   if (premieredString.size() == 4)
+     details.SetYear(record->at(VIDEODB_DETAILS_MOVIE_PREMIERED).get_asInt());
+@@ -4446,6 +4497,17 @@
+                     record->at(VIDEODB_DETAILS_TVSHOW_VOTES).get_asInt(),
+                     record->at(VIDEODB_DETAILS_TVSHOW_RATING_TYPE).get_asString(), true);
+   details.SetUniqueID(record->at(VIDEODB_DETAILS_TVSHOW_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_TVSHOW_UNIQUEID_TYPE).get_asString(), true);
++
++  // Extended metadata: read specific ratings and status from view columns (CoreELEC extension)
++  details.m_fImdbRating = record->at(VIDEODB_DETAILS_TVSHOW_IMDB_RATING).get_asFloat();
++  details.m_fTmdbRating = record->at(VIDEODB_DETAILS_TVSHOW_TMDB_RATING).get_asFloat();
++  details.m_fTraktRating = record->at(VIDEODB_DETAILS_TVSHOW_TRAKT_RATING).get_asFloat();
++  details.m_strStatus = record->at(VIDEODB_DETAILS_TVSHOW_STATUS).get_asString();
++  details.m_strNextAired = record->at(VIDEODB_DETAILS_TVSHOW_NEXT_AIRED).get_asString();
++  details.m_iTotalSeasonsExt = record->at(VIDEODB_DETAILS_TVSHOW_TOTAL_SEASONS_EXT).get_asInt();
++  details.m_iTotalEpisodesExt = record->at(VIDEODB_DETAILS_TVSHOW_TOTAL_EPISODES_EXT).get_asInt();
++  details.m_strNetwork = record->at(VIDEODB_DETAILS_TVSHOW_NETWORK).get_asString();
++
+   details.SetDuration(record->at(VIDEODB_DETAILS_TVSHOW_DURATION).get_asInt());
+ 
+   //! @todo videotag member + guiinfo int needed?
+@@ -4548,6 +4610,13 @@
+                     record->at(VIDEODB_DETAILS_EPISODE_VOTES).get_asInt(),
+                     record->at(VIDEODB_DETAILS_EPISODE_RATING_TYPE).get_asString(), true);
+   details.SetUniqueID(record->at(VIDEODB_DETAILS_EPISODE_UNIQUEID_VALUE).get_asString(), record->at(VIDEODB_DETAILS_EPISODE_UNIQUEID_TYPE).get_asString(), true);
++
++  // Extended metadata: read specific ratings from view columns (CoreELEC extension)
++  details.m_fImdbRating = record->at(VIDEODB_DETAILS_EPISODE_IMDB_RATING).get_asFloat();
++  details.m_fTmdbRating = record->at(VIDEODB_DETAILS_EPISODE_TMDB_RATING).get_asFloat();
++  details.m_fRtRating = record->at(VIDEODB_DETAILS_EPISODE_RT_RATING).get_asFloat();
++  details.m_fMetacriticRating = record->at(VIDEODB_DETAILS_EPISODE_METACRITIC_RATING).get_asFloat();
++  details.m_fTraktRating = record->at(VIDEODB_DETAILS_EPISODE_TRAKT_RATING).get_asFloat();
+ 
+   if (getDetails)
+   {
+diff --git a/xbmc/video/VideoDatabase.h b/xbmc/video/VideoDatabase.h
+--- a/xbmc/video/VideoDatabase.h	2025-12-22 17:28:39
++++ b/xbmc/video/VideoDatabase.h	2025-12-22 17:30:19
+@@ -106,6 +106,13 @@
+ #define VIDEODB_DETAILS_MOVIE_VERSION_TYPENAME VIDEODB_MAX_COLUMNS + 25
+ #define VIDEODB_DETAILS_MOVIE_VERSION_ITEMTYPE VIDEODB_MAX_COLUMNS + 26
+ 
++// Extended metadata columns for movies (CoreELEC extension)
++#define VIDEODB_DETAILS_MOVIE_IMDB_RATING       VIDEODB_MAX_COLUMNS + 27
++#define VIDEODB_DETAILS_MOVIE_TMDB_RATING       VIDEODB_MAX_COLUMNS + 28
++#define VIDEODB_DETAILS_MOVIE_RT_RATING         VIDEODB_MAX_COLUMNS + 29
++#define VIDEODB_DETAILS_MOVIE_METACRITIC_RATING VIDEODB_MAX_COLUMNS + 30
++#define VIDEODB_DETAILS_MOVIE_TRAKT_RATING      VIDEODB_MAX_COLUMNS + 31
++
+ #define VIDEODB_DETAILS_EPISODE_TVSHOW_ID       VIDEODB_MAX_COLUMNS + 2
+ #define VIDEODB_DETAILS_EPISODE_USER_RATING     VIDEODB_MAX_COLUMNS + 3
+ #define VIDEODB_DETAILS_EPISODE_SEASON_ID       VIDEODB_MAX_COLUMNS + 4
+@@ -128,6 +135,13 @@
+ #define VIDEODB_DETAILS_EPISODE_UNIQUEID_VALUE  VIDEODB_MAX_COLUMNS + 21
+ #define VIDEODB_DETAILS_EPISODE_UNIQUEID_TYPE   VIDEODB_MAX_COLUMNS + 22
+ 
++// Extended metadata columns for episodes (CoreELEC extension)
++#define VIDEODB_DETAILS_EPISODE_IMDB_RATING       VIDEODB_MAX_COLUMNS + 23
++#define VIDEODB_DETAILS_EPISODE_TMDB_RATING       VIDEODB_MAX_COLUMNS + 24
++#define VIDEODB_DETAILS_EPISODE_RT_RATING         VIDEODB_MAX_COLUMNS + 25
++#define VIDEODB_DETAILS_EPISODE_METACRITIC_RATING VIDEODB_MAX_COLUMNS + 26
++#define VIDEODB_DETAILS_EPISODE_TRAKT_RATING      VIDEODB_MAX_COLUMNS + 27
++
+ #define VIDEODB_DETAILS_TVSHOW_USER_RATING      VIDEODB_MAX_COLUMNS + 1
+ #define VIDEODB_DETAILS_TVSHOW_DURATION         VIDEODB_MAX_COLUMNS + 2
+ #define VIDEODB_DETAILS_TVSHOW_PARENTPATHID     VIDEODB_MAX_COLUMNS + 3
+@@ -143,6 +157,16 @@
+ #define VIDEODB_DETAILS_TVSHOW_UNIQUEID_VALUE   VIDEODB_MAX_COLUMNS + 13
+ #define VIDEODB_DETAILS_TVSHOW_UNIQUEID_TYPE    VIDEODB_MAX_COLUMNS + 14
+ #define VIDEODB_DETAILS_TVSHOW_NUM_INPROGRESS VIDEODB_MAX_COLUMNS + 15
++
++// Extended metadata columns for TV shows (CoreELEC extension)
++#define VIDEODB_DETAILS_TVSHOW_IMDB_RATING       VIDEODB_MAX_COLUMNS + 16
++#define VIDEODB_DETAILS_TVSHOW_TMDB_RATING       VIDEODB_MAX_COLUMNS + 17
++#define VIDEODB_DETAILS_TVSHOW_TRAKT_RATING      VIDEODB_MAX_COLUMNS + 18
++#define VIDEODB_DETAILS_TVSHOW_STATUS            VIDEODB_MAX_COLUMNS + 19
++#define VIDEODB_DETAILS_TVSHOW_NEXT_AIRED        VIDEODB_MAX_COLUMNS + 20
++#define VIDEODB_DETAILS_TVSHOW_TOTAL_SEASONS_EXT VIDEODB_MAX_COLUMNS + 21
++#define VIDEODB_DETAILS_TVSHOW_TOTAL_EPISODES_EXT VIDEODB_MAX_COLUMNS + 22
++#define VIDEODB_DETAILS_TVSHOW_NETWORK           VIDEODB_MAX_COLUMNS + 23
+ 
+ #define VIDEODB_DETAILS_MUSICVIDEO_USER_RATING  VIDEODB_MAX_COLUMNS + 2
+ #define VIDEODB_DETAILS_MUSICVIDEO_PREMIERED    VIDEODB_MAX_COLUMNS + 3
+diff --git a/xbmc/video/VideoInfoTag.h b/xbmc/video/VideoInfoTag.h
+--- a/xbmc/video/VideoInfoTag.h	2025-12-22 17:28:39
++++ b/xbmc/video/VideoInfoTag.h	2025-12-22 17:29:48
+@@ -388,6 +388,21 @@
+   std::vector<std::string> m_showLink;
+   std::map<int, std::string> m_namedSeasons;
+   int m_iTop250;
++
++  // Extended metadata (CoreELEC extension)
++  // These are populated directly from SQL view subqueries, not from GetRatings()
++  // This allows ratings to work in list views without N+1 queries
++  float m_fImdbRating = 0.0f;
++  float m_fTmdbRating = 0.0f;
++  float m_fRtRating = 0.0f;         // Rotten Tomatoes (tomatometerallcritics)
++  float m_fMetacriticRating = 0.0f;
++  float m_fTraktRating = 0.0f;
++  std::string m_strStatus;          // TV show status (Returning Series, Ended, etc.)
++  std::string m_strNextAired;       // Next episode air date (ISO format)
++  std::string m_strNetwork;         // TV network(s), comma-separated
++  int m_iTotalSeasonsExt = 0;       // Total seasons from external source
++  int m_iTotalEpisodesExt = 0;      // Total episodes from external source
++
+   int m_year;
+   int m_iSeason;
+   int m_iEpisode;
