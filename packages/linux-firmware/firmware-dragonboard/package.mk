@@ -3,7 +3,7 @@
 
 PKG_NAME="firmware-dragonboard"
 PKG_VERSION="1.4.0"
-PKG_SHA256="822d2f8506d9657dbce6aa2bfce81ccbf97dcfc40831b70703b14b3f296fa4c0"
+PKG_SHA256="8659f68564076cc9d1e69bee54ecd3bd23dbfce75565a1a65ab211fc908998fa"
 PKG_ARCH="aarch64 arm"
 PKG_LICENSE="proprietary"
 PKG_SITE="https://developer.qualcomm.com/"
