@@ -3,7 +3,7 @@
 
 PKG_NAME="edid-decode"
 PKG_VERSION="9ba4e90f3c0705351d32f526653e3e765fa2cf64" # 2022-09-23
-PKG_SHA256="a01efec2c97af585b3f7cc5f0cc8ed38da00a2464eac0c1690f3eafcd464747f"
+PKG_SHA256="b3aadd37e7f1074a8413c6f2dc62581c509e8b6ac4683cb3db17648e789b1387"
 PKG_LICENSE="None"
 PKG_SITE="https://gitlab.freedesktop.org/emersion/edid-decode"
 PKG_URL="https://gitlab.freedesktop.org/emersion/edid-decode/-/archive/${PKG_VERSION}/edid-decode-${PKG_VERSION}.tar.gz"
