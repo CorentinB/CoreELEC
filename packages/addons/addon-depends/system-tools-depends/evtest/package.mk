@@ -3,7 +3,7 @@
 
 PKG_NAME="evtest"
 PKG_VERSION="1.35"
-PKG_SHA256="a224abeb783561193660999b0c986216d691cb271b5ec3af88c6bb37b55ff51c"
+PKG_SHA256="4218571f3cc21c8004e82b67bb35d77d72a845f4bf927b17de3225dd7e863822"
 PKG_LICENSE="GPL"
 PKG_SITE="http://cgit.freedesktop.org/evtest/"
 PKG_URL="https://repo.or.cz/evtest.git/snapshot/evtest-${PKG_VERSION}.tar.gz"
