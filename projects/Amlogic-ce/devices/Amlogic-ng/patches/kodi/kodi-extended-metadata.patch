@@ -114,7 +114,7 @@ diff --color -ruN xbmc.orig/guilib/guiinfo/VideoGUIInfo.cpp xbmc/guilib/guiinfo/
        {
 diff --color -ruN xbmc.orig/video/VideoDatabase.cpp xbmc/video/VideoDatabase.cpp
 --- a/xbmc/video/VideoDatabase.cpp	2025-12-22 17:28:39
-+++ b/xbmc/video/VideoDatabase.cpp	2025-12-22 17:41:00
++++ b/xbmc/video/VideoDatabase.cpp	2025-12-22 17:56:07
 @@ -138,6 +138,10 @@
    for (int i = 0; i < VIDEODB_MAX_COLUMNS; i++)
      columns += StringUtils::Format(",c{:02} text", i);
@@ -247,7 +247,7 @@ diff --color -ruN xbmc.orig/video/VideoDatabase.cpp xbmc/video/VideoDatabase.cpp
    if (getDetails)
    {
      if (getDetails & VideoDbDetailsCast)
-@@ -6392,11 +6462,30 @@
+@@ -6392,11 +6462,29 @@
      }
      m_pDS->close();
    }
@@ -267,8 +267,7 @@ diff --color -ruN xbmc.orig/video/VideoDatabase.cpp xbmc/video/VideoDatabase.cpp
 +    m_pDS->exec("CREATE TABLE IF NOT EXISTS network (network_id INTEGER PRIMARY KEY, name TEXT UNIQUE)");
 +    m_pDS->exec("CREATE TABLE IF NOT EXISTS network_link (network_id INTEGER, media_id INTEGER, media_type TEXT, link_order INTEGER DEFAULT 0)");
 +
-+    // Recreate views with extended rating subqueries
-+    CreateViews();
++    // Views are recreated automatically by Kodi after all migrations
 +  }
  }
  
