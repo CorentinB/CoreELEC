@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Download all package sources without building
+
+. config/options ""
+
+echo "Downloading all package sources..."
+echo "This may take a while..."
+
+# Get all packages
+for i in $(find "${PACKAGES}/" -type f -name "package.mk"); do
+  PKG=$(grep "^PKG_NAME=" "${i}" | sed -e "s,\",,g" -e "s,PKG_NAME=,,")
+  if [ -n "${PKG}" ]; then
+    echo "Downloading: ${PKG}"
+    ${SCRIPTS}/get "${PKG}" 2>&1 || echo "  Warning: Failed to download ${PKG}"
+  fi
+done
+
+echo ""
+echo "Source download complete!"
+echo "You can now run: PROJECT=Amlogic-ce DEVICE=Amlogic-ng ARCH=arm make image"

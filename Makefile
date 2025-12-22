@@ -12,6 +12,9 @@ image:
 noobs:
 	./scripts/image noobs
 
+source:
+	./scripts/download_sources
+
 clean:
 	./scripts/makefile_helper --clean
 
