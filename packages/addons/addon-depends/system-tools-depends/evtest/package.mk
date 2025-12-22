@@ -3,10 +3,10 @@
 
 PKG_NAME="evtest"
 PKG_VERSION="1.35"
-PKG_SHA256="4218571f3cc21c8004e82b67bb35d77d72a845f4bf927b17de3225dd7e863822"
+PKG_SHA256="06dfe6b9760b78f3f73aca2120cbcb79339b33e59d5c79a49b4bd5d34844b054"
 PKG_LICENSE="GPL"
-PKG_SITE="http://cgit.freedesktop.org/evtest/"
-PKG_URL="https://repo.or.cz/evtest.git/snapshot/evtest-${PKG_VERSION}.tar.gz"
+PKG_SITE="https://gitlab.freedesktop.org/libevdev/evtest"
+PKG_URL="https://gitlab.freedesktop.org/libevdev/evtest/-/archive/evtest-${PKG_VERSION}/evtest-evtest-${PKG_VERSION}.tar.gz"
 PKG_DEPENDS_TARGET="toolchain libxml2"
 PKG_LONGDESC="A simple tool for input event debugging."
 PKG_TOOLCHAIN="autotools"
