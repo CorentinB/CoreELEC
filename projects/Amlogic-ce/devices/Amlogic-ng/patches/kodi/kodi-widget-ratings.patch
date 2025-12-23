@@ -1,0 +1,151 @@
+diff --color -ruN a/xbmc/video/VideoDatabase.h b/xbmc/video/VideoDatabase.h
+--- a/xbmc/video/VideoDatabase.h
++++ b/xbmc/video/VideoDatabase.h
+@@ -1186,6 +1186,9 @@ protected:
+   void GetCast(int media_id, const std::string &media_type, std::vector<SActorInfo> &cast);
+   void GetTags(int media_id, const std::string &media_type, std::vector<std::string> &tags);
+   void GetRatings(int media_id, const std::string &media_type, RatingMap &ratings);
++  void GetRatingsBatch(const std::vector<int>& media_ids,
++                       const std::string& media_type,
++                       std::map<int, RatingMap>& ratingsById);
+   void GetUniqueIDs(int media_id, const std::string &media_type, CVideoInfoTag& details);
+ 
+   void GetDetailsFromDB(std::unique_ptr<dbiplus::Dataset> &pDS, int min, int max, const SDbTableOffsets *offsets, CVideoInfoTag &details, int idxOffset = 2);
+diff --color -ruN a/xbmc/video/VideoDatabase.cpp b/xbmc/video/VideoDatabase.cpp
+--- a/xbmc/video/VideoDatabase.cpp
++++ b/xbmc/video/VideoDatabase.cpp
+@@ -4725,6 +4725,48 @@ void CVideoDatabase::GetRatings(int media_id, const std::string &media_type, Rat
+   }
+ }
+ 
++void CVideoDatabase::GetRatingsBatch(const std::vector<int>& media_ids,
++                                     const std::string& media_type,
++                                     std::map<int, RatingMap>& ratingsById)
++{
++  try
++  {
++    if (!m_pDB || !m_pDS2 || media_ids.empty())
++      return;
++
++    // Build comma-separated list of IDs
++    std::string idList;
++    for (size_t i = 0; i < media_ids.size(); ++i)
++    {
++      if (i > 0)
++        idList += ",";
++      idList += std::to_string(media_ids[i]);
++    }
++
++    std::string sql = PrepareSQL(
++        "SELECT media_id, rating_type, rating, votes FROM rating "
++        "WHERE media_id IN (%s) AND media_type = '%s'",
++        idList.c_str(), media_type.c_str());
++
++    m_pDS2->query(sql);
++    while (!m_pDS2->eof())
++    {
++      int mediaId = m_pDS2->fv(0).get_asInt();
++      std::string ratingType = m_pDS2->fv(1).get_asString();
++      float rating = m_pDS2->fv(2).get_asFloat();
++      int votes = m_pDS2->fv(3).get_asInt();
++
++      ratingsById[mediaId][ratingType] = CRating(rating, votes);
++      m_pDS2->next();
++    }
++    m_pDS2->close();
++  }
++  catch (...)
++  {
++    CLog::Log(LOGERROR, "{} failed", __FUNCTION__);
++  }
++}
++
+ void CVideoDatabase::GetUniqueIDs(int media_id, const std::string &media_type, CVideoInfoTag& details)
+ {
+   try
+@@ -8265,6 +8307,42 @@ bool CVideoDatabase::GetMoviesByWhere(const std::string& strBaseDir, const Filte
+       }
+     }
+ 
++    // Batch load extended ratings for widget containers
++    if (getDetails == VideoDbDetailsNone || (getDetails & VideoDbDetailsRating))
++    {
++      std::vector<int> movieIds;
++      movieIds.reserve(items.Size());
++      for (int i = 0; i < items.Size(); ++i)
++      {
++        CVideoInfoTag* tag = items[i]->GetVideoInfoTag();
++        if (tag && tag->m_iDbId > 0)
++          movieIds.push_back(tag->m_iDbId);
++      }
++
++      if (!movieIds.empty())
++      {
++        std::map<int, RatingMap> ratingsById;
++        GetRatingsBatch(movieIds, MediaTypeMovie, ratingsById);
++
++        for (int i = 0; i < items.Size(); ++i)
++        {
++          CVideoInfoTag* tag = items[i]->GetVideoInfoTag();
++          if (tag && tag->m_iDbId > 0)
++          {
++            auto it = ratingsById.find(tag->m_iDbId);
++            if (it != ratingsById.end())
++            {
++              for (const auto& rating : it->second)
++              {
++                if (tag->m_ratings.find(rating.first) == tag->m_ratings.end())
++                  tag->m_ratings[rating.first] = rating.second;
++              }
++            }
++          }
++        }
++      }
++    }
++
+     // cleanup
+     m_pDS->close();
+     return true;
+@@ -8415,6 +8493,42 @@ bool CVideoDatabase::GetTvShowsByWhere(const std::string& strBaseDir, const Filt
+       }
+     }
+ 
++    // Batch load extended ratings for widget containers
++    if (getDetails == VideoDbDetailsNone || (getDetails & VideoDbDetailsRating))
++    {
++      std::vector<int> showIds;
++      showIds.reserve(items.Size());
++      for (int i = 0; i < items.Size(); ++i)
++      {
++        CVideoInfoTag* tag = items[i]->GetVideoInfoTag();
++        if (tag && tag->m_iDbId > 0)
++          showIds.push_back(tag->m_iDbId);
++      }
++
++      if (!showIds.empty())
++      {
++        std::map<int, RatingMap> ratingsById;
++        GetRatingsBatch(showIds, MediaTypeTvShow, ratingsById);
++
++        for (int i = 0; i < items.Size(); ++i)
++        {
++          CVideoInfoTag* tag = items[i]->GetVideoInfoTag();
++          if (tag && tag->m_iDbId > 0)
++          {
++            auto it = ratingsById.find(tag->m_iDbId);
++            if (it != ratingsById.end())
++            {
++              for (const auto& rating : it->second)
++              {
++                if (tag->m_ratings.find(rating.first) == tag->m_ratings.end())
++                  tag->m_ratings[rating.first] = rating.second;
++              }
++            }
++          }
++        }
++      }
++    }
++
+     // cleanup
+     m_pDS->close();
+     return true;
